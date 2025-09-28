@@ -31,7 +31,7 @@ env/
 
 # Jupyter Notebook
 .ipynb_checkpoints
-*.ipynb
+# *.ipynb  # Allow notebook files in the repository
 
 # IDE
 .vscode/
