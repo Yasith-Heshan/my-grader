@@ -53,13 +53,15 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
 
+from db.grade_repository import GradeRepository
+
 
 class LocalGrader:
     """
     Main grader class for handling homework assignments, test cases, and student submissions
     """
     
-    def __init__(self, homework_name: str, data_dir: str = "grader_data"):
+    def __init__(self, homework_name: str, repo: Optional[GradeRepository] = None, data_dir: str = "grader_data"):
         """
         Initialize the grader for a specific homework assignment
         
@@ -70,6 +72,7 @@ class LocalGrader:
         self.homework_name = homework_name
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
+        self.repo = repo
         
         # File paths
         self.homework_file = self.data_dir / f"{homework_name}_homework.json"
@@ -80,8 +83,42 @@ class LocalGrader:
         # Load or initialize data
         self.homework_data = self._load_homework_data()
         self.grades_data = self._load_grades_data()
-        
+    # # *******************************************************
+    # def _load_homework_data(self) -> Dict:
+    #     if self.repo:
+    #         data = self.repo.get_homework(self.homework_name)
+    #         if data:
+    #             return data
+    #     # fallback JSON
+    #     if self.homework_file.exists():
+    #         return json.loads(self.homework_file.read_text())
+    #     return { ... default dict ... }
+
+    # def _save_homework_data(self):
+    #     if self.repo:
+    #         self.repo.save_homework(self.homework_data)
+    #     else:
+    #         self.homework_file.write_text(json.dumps(self.homework_data, indent=2))
+
+    # def _load_grades_data(self) -> Dict:
+    #     if self.repo:
+    #         return self.repo.get_grades(self.homework_name)
+    #     if self.grades_file.exists():
+    #         return json.loads(self.grades_file.read_text())
+    #     return { "students": {}, "submissions": [] }
+
+    # def _save_grades_data(self):
+    #     if self.repo:
+    #         self.repo.save_grades(self.homework_name, self.grades_data)
+    #     else:
+    #         self.grades_file.write_text(json.dumps(self.grades_data, indent=2))
+
+    # ********************************************************
     def _load_homework_data(self) -> Dict:
+        if self.repo:
+            data = self.repo.get_homework(self.homework_name)
+            if data:
+                return data
         """Load homework configuration and metadata"""
         if self.homework_file.exists():
             with open(self.homework_file, 'r') as f:
@@ -99,6 +136,8 @@ class LocalGrader:
         }
     
     def _load_grades_data(self) -> Dict:
+        if self.repo:
+            return self.repo.get_grades(self.homework_name)
         """Load student grades and submission history"""
         if self.grades_file.exists():
             with open(self.grades_file, 'r') as f:
@@ -109,11 +148,15 @@ class LocalGrader:
         }
     
     def _save_homework_data(self):
+        if self.repo:
+            self.repo.save_homework(self.homework_data)
         """Save homework configuration"""
         with open(self.homework_file, 'w') as f:
             json.dump(self.homework_data, f, indent=2)
     
     def _save_grades_data(self):
+        if self.repo:
+            self.repo.save_grades(self.homework_name, self.grades_data)
         """Save grades and submissions"""
         try:
             # Add debugging to see what's being serialized

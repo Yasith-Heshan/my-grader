@@ -3,7 +3,7 @@ Comprehensive Test Suite for Local Grader System
 Demonstrates all advanced features and capabilities
 """
 
-from local_grader import LocalGrader, create_function_test, create_dataframe_test
+from src.grader.local_grader import LocalGrader, create_function_test, create_dataframe_test
 import pandas as pd
 import numpy as np
 import time
@@ -93,6 +93,12 @@ def sample_solve_quadratic(a, b, c):
 def sample_add_numbers(x, y):
     return x + y
 
+from db.mongo_client import MongoDBClient
+from db.grade_repository import GradeRepository
+
+mongo = MongoDBClient("mongodb://localhost:27017", "grading_system")
+homework_repo = GradeRepository(mongo.get_collection("grades"))
+
 
 def run_comprehensive_test():
     """Run a comprehensive test of the grader system"""
@@ -102,7 +108,8 @@ def run_comprehensive_test():
     
     # Create a test homework
     homework_name = "ComprehensiveTest_2025"
-    grader = LocalGrader(homework_name)
+    # use LocalGrader with Mongo
+    grader = LocalGrader("hw1", repo=homework_repo)
     
     print(f"✅ Created homework: {homework_name}")
     

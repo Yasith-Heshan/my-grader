@@ -87,7 +87,7 @@ def create_sample_homework():
     print("\n📚 Creating Sample Homework...")
     
     try:
-        from local_grader import LocalGrader
+        from src.grader.local_grader import LocalGrader
         
         # Create sample homework
         grader = LocalGrader("Sample_Math_Quiz")

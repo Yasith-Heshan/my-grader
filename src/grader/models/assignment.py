@@ -1,4 +1,4 @@
-from local_grader import LocalGrader
+from grader.local_grader import LocalGrader
 
 
 class Assignment:
