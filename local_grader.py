@@ -41,9 +41,7 @@ Features:
 - Teacher and student interfaces
 """
 
-import json
 import os
-import pickle
 import datetime
 import time
 import traceback
@@ -52,6 +50,7 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
+from database import get_db_manager, HomeworkDataManager, GradesDataManager, TestCaseManager
 
 
 class LocalGrader:
@@ -65,92 +64,33 @@ class LocalGrader:
         
         Args:
             homework_name: Name of the homework assignment
-            data_dir: Directory to store grading data
+            data_dir: Directory for exports (optional, only used for file exports)
         """
         self.homework_name = homework_name
+        # Only create data_dir when needed for exports
         self.data_dir = Path(data_dir)
-        self.data_dir.mkdir(exist_ok=True)
         
-        # File paths
-        self.homework_file = self.data_dir / f"{homework_name}_homework.json"
-        self.grades_file = self.data_dir / f"{homework_name}_grades.json"
-        self.tests_dir = self.data_dir / f"{homework_name}_tests"
-        self.tests_dir.mkdir(exist_ok=True)
+        # Initialize database managers
+        self.db_manager = get_db_manager()
+        self.homework_manager = HomeworkDataManager(self.db_manager)
+        self.grades_manager = GradesDataManager(self.db_manager)
+        self.test_manager = TestCaseManager(self.db_manager)
         
-        # Load or initialize data
-        self.homework_data = self._load_homework_data()
-        self.grades_data = self._load_grades_data()
+        # Load or initialize data from MongoDB
+        self.homework_data = self.homework_manager.load_homework_data(homework_name)
+        self.grades_data = self.grades_manager.load_grades_data(homework_name)
         
-    def _load_homework_data(self) -> Dict:
-        """Load homework configuration and metadata"""
-        if self.homework_file.exists():
-            with open(self.homework_file, 'r') as f:
-                return json.load(f)
-        return {
-            "name": self.homework_name,
-            "created": datetime.datetime.now().isoformat(),
-            "test_cases": {},
-            "max_score": 0,
-            "settings": {
-                "allow_late": True,
-                "time_limit": 30,  # seconds per test
-                "partial_credit": True
-            }
-        }
-    
-    def _load_grades_data(self) -> Dict:
-        """Load student grades and submission history"""
-        if self.grades_file.exists():
-            with open(self.grades_file, 'r') as f:
-                return json.load(f)
-        return {
-            "students": {},
-            "submissions": []
-        }
-    
+
+
     def _save_homework_data(self):
-        """Save homework configuration"""
-        with open(self.homework_file, 'w') as f:
-            json.dump(self.homework_data, f, indent=2)
+        """Save homework configuration to MongoDB"""
+        self.homework_manager.save_homework_data(self.homework_data)
     
     def _save_grades_data(self):
-        """Save grades and submissions"""
-        try:
-            # Add debugging to see what's being serialized
-            import json
-            
-            def check_serializable(obj, path="root"):
-                """Recursively check if object is JSON serializable"""
-                try:
-                    if hasattr(obj, 'to_dict'):  # DataFrame or similar
-                        print(f"Found DataFrame-like object at {path}")
-                        return False
-                    elif isinstance(obj, dict):
-                        for key, value in obj.items():
-                            if not check_serializable(value, f"{path}.{key}"):
-                                return False
-                    elif isinstance(obj, list):
-                        for i, value in enumerate(obj):
-                            if not check_serializable(value, f"{path}[{i}]"):
-                                return False
-                    # Try to serialize individual item
-                    json.dumps(obj)
-                    return True
-                except (TypeError, ValueError) as e:
-                    print(f"Non-serializable object at {path}: {type(obj)} - {e}")
-                    return False
-            
-            # Check before saving
-            if not check_serializable(self.grades_data):
-                print("Found non-serializable data, attempting to fix...")
-                # Don't save if there are issues
-                return
-            
-            with open(self.grades_file, 'w') as f:
-                json.dump(self.grades_data, f, indent=2)
-        except Exception as e:
-            print(f"Error saving grades data: {e}")
-            raise
+        """Save grades and submissions to MongoDB"""
+        # This method is now handled by individual submission saves
+        # No bulk save needed as submissions are saved individually
+        pass
     
     def add_test_case(self, test_name: str, test_function: Callable, points: float, 
                       description: str = "", timeout: float = 30):
@@ -164,17 +104,19 @@ class LocalGrader:
             description: Human-readable description
             timeout: Maximum time allowed for test execution
         """
-        # Save test function as pickle
-        test_file = self.tests_dir / f"{test_name}.pkl"
-        with open(test_file, 'wb') as f:
-            pickle.dump(test_function, f)
+        # Save test function to MongoDB
+        success = self.test_manager.save_test_function(
+            self.homework_name, test_name, test_function, points, description, timeout
+        )
         
-        # Store test metadata
+        if not success:
+            raise RuntimeError(f"Failed to save test function '{test_name}' to database")
+        
+        # Store test metadata in homework configuration
         self.homework_data["test_cases"][test_name] = {
             "points": points,
             "description": description,
             "timeout": timeout,
-            "file": str(test_file),
             "created": datetime.datetime.now().isoformat()
         }
         
@@ -247,21 +189,27 @@ class LocalGrader:
             "submission_data": safe_submission_data
         }
         
-        # Update student records
+        # Save submission to MongoDB
+        self.grades_manager.save_submission(self.homework_name, student_id, submission_record)
+        
+        # Update in-memory grades data for compatibility
+        if student_id not in self.grades_data["students"]:
+            self.grades_data["students"][student_id] = {"submissions": []}
+        
         self.grades_data["students"][student_id]["submissions"].append(submission_record)
-        if total_score > self.grades_data["students"][student_id]["best_score"]:
+        if "best_score" not in self.grades_data["students"][student_id] or total_score > self.grades_data["students"][student_id]["best_score"]:
             self.grades_data["students"][student_id]["best_score"] = total_score
             self.grades_data["students"][student_id]["best_submission"] = submission_record
         
         # Add to global submissions log
+        if "submissions" not in self.grades_data:
+            self.grades_data["submissions"] = []
         self.grades_data["submissions"].append({
             "student_id": student_id,
             "submission_time": submission_time,
             "score": total_score,
             "percentage": percentage
         })
-        
-        self._save_grades_data()
         
         return {
             "student_id": student_id,
@@ -286,9 +234,19 @@ class LocalGrader:
         
         for test_name, test_info in self.homework_data["test_cases"].items():
             try:
-                # Load test function
-                with open(test_info["file"], 'rb') as f:
-                    test_function = pickle.load(f)
+                # Load test function from MongoDB
+                test_function = self.test_manager.load_test_function(self.homework_name, test_name)
+                
+                if test_function is None:
+                    results[test_name] = {
+                        "points_possible": test_info["points"],
+                        "points_earned": 0,
+                        "status": "ERROR",
+                        "feedback": f"❌ Test function '{test_name}' not found in database!",
+                        "execution_time": 0.0,
+                        "description": test_info.get("description", "")
+                    }
+                    continue
                 
                 # Run test with timeout
                 start_time = time.time()
@@ -473,19 +431,25 @@ class LocalGrader:
             
             df = pd.DataFrame(data)
             filename = f"{self.homework_name}_grades_{timestamp}.csv"
+            
+            # Create export directory only when needed
+            self.data_dir.mkdir(exist_ok=True)
             filepath = self.data_dir / filename
             df.to_csv(filepath, index=False)
             return str(filepath)
         
         elif format == "json":
+            import json
             filename = f"{self.homework_name}_grades_{timestamp}.json"
+            
+            # Create export directory only when needed
+            self.data_dir.mkdir(exist_ok=True)
             filepath = self.data_dir / filename
             
-            export_data = {
-                "homework_info": self.homework_data,
-                "grades": self.grades_data,
-                "exported": timestamp
-            }
+            # Get export data from MongoDB
+            export_data = self.grades_manager.export_grades(self.homework_name)
+            export_data["homework_info"] = self.homework_data
+            export_data["exported"] = timestamp
             
             with open(filepath, 'w') as f:
                 json.dump(export_data, f, indent=2)
@@ -496,8 +460,28 @@ class LocalGrader:
     
     def clear_all_data(self):
         """Clear all grading data (use with caution!)"""
+        # Clear MongoDB data
+        self.grades_manager.collection.delete_many({"homework_name": self.homework_name})
+        
+        # Clear test cases from MongoDB
+        self.test_manager.collection.delete_many({"homework_name": self.homework_name})
+        
+        # Clear homework configuration
+        self.homework_manager.collection.delete_one({"name": self.homework_name})
+        
+        # Clear in-memory data
+        self.homework_data = {
+            "name": self.homework_name,
+            "created": datetime.datetime.now().isoformat(),
+            "test_cases": {},
+            "max_score": 0,
+            "settings": {
+                "allow_late": True,
+                "time_limit": 30,
+                "partial_credit": True
+            }
+        }
         self.grades_data = {"students": {}, "submissions": []}
-        self._save_grades_data()
         print("⚠️ All grading data cleared!")
 
 
