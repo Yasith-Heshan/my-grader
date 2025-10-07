@@ -126,7 +126,42 @@ class TestCaseManager:
         self.collection = db_manager.get_collection('test_cases')
         
         # Create index on homework_name and test_name for faster queries
-        self.collection.create_index([("homework_name", 1), ("test_name", 1)], unique=True)
+        # Handle potential duplicate key errors gracefully
+        self._ensure_unique_index()
+    
+    def _ensure_unique_index(self):
+        """Ensure unique index exists, cleaning up any null values first"""
+        try:
+            # Clean up any documents with null homework_name or test_name
+            null_filter = {
+                "$or": [
+                    {"homework_name": None},
+                    {"test_name": None}
+                ]
+            }
+            
+            # Remove documents with null values to avoid duplicate key errors
+            deleted_result = self.collection.delete_many(null_filter)
+            if deleted_result.deleted_count > 0:
+                print(f"Cleaned up {deleted_result.deleted_count} test case documents with null values")
+            
+            # Try to create the unique index
+            try:
+                self.collection.create_index([("homework_name", 1), ("test_name", 1)], unique=True)
+            except Exception as index_error:
+                # If index already exists or there's another issue, that's okay
+                if "duplicate key error" in str(index_error).lower():
+                    # Drop existing index and recreate
+                    try:
+                        self.collection.drop_index("homework_name_1_test_name_1")
+                    except:
+                        pass  # Index might not exist
+                    self.collection.create_index([("homework_name", 1), ("test_name", 1)], unique=True)
+                elif "already exists" not in str(index_error).lower():
+                    print(f"Warning: Could not create index: {index_error}")
+        
+        except Exception as e:
+            print(f"Warning: Error during index setup: {e}")
     
     def save_test_function(self, homework_name: str, test_name: str, test_function: Callable, 
                           points: float, description: str, timeout: float) -> bool:
