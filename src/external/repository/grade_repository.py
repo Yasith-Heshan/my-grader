@@ -1,11 +1,11 @@
-from utils.constants import TABLE_GRADES
+from utils.constants import COLLECTION_GRADES
 from external.adapters.database_interface import DatabaseInterface
 import datetime
 
 class GradeRepository:
     def __init__(self, db_adapter: DatabaseInterface):
         self.db_adapter = db_adapter
-        self.collection = TABLE_GRADES  # From constants.py
+        self.collection = COLLECTION_GRADES # From constants.py
 
     def get_grades(self, homework_name):
         """Get grades data for a specific homework assignment"""
