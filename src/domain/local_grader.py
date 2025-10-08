@@ -74,19 +74,17 @@ class LocalGrader:
         self.data_dir.mkdir(exist_ok=True)
         
         # File paths
-        self.homework_file = self.data_dir / f"{homework_name}_homework.json"
-        self.grades_file = self.data_dir / f"{homework_name}_grades.json"
         self.tests_dir = self.data_dir / f"{homework_name}_tests"
 
 
         self.tests_dir.mkdir(exist_ok=True)
         
         # Load or initialize data
-        self.homework_data = self._load_homework_data2()
+        self.homework_data = self._load_homework_data()
         self.grades_data = self._load_grades_data()
 
-    def _load_homework_data2(self) -> Dict:
-        """Load homework configuration and metadata from MongoDB repository only"""
+    def _load_homework_data(self) -> Dict:
+        """Load homework configuration and metadata"""
         homework_data = self.container.homework_repository.get_homework(self.homework_name)
         print("Loaded homework data from repository:", homework_data)
         
@@ -111,77 +109,39 @@ class LocalGrader:
             }
         }
     
-    def _load_homework_data(self) -> Dict:
-        """Load homework configuration and metadata"""
-        homework_data = self.container.homework_repository.get_homework(self.homework_name)
-        print("Loaded homework data from repository:", homework_data)
-        if homework_data:
-            with open(self.homework_file, 'r') as f:
-                return json.load(f)
-        return {
-            "name": self.homework_name,
-            "created": datetime.datetime.now().isoformat(),
-            "test_cases": {},
-            "max_score": 0,
-            "settings": {
-                "allow_late": True,
-                "time_limit": 30,  # seconds per test
-                "partial_credit": True
-            }
-        }
-    
     def _load_grades_data(self) -> Dict:
-        """Load student grades and submission history"""
-        if self.grades_file.exists():
-            with open(self.grades_file, 'r') as f:
-                return json.load(f)
+        """Load student grades and submission history from MongoDB repository"""
+        grades_data = self.container.grade_repository.get_grades(self.homework_name)
+        
+        if grades_data:
+            # Remove MongoDB's _id field if present
+            if '_id' in grades_data:
+                del grades_data['_id']
+            # Remove homework_name field as it's not part of the original structure
+            if 'homework_name' in grades_data:
+                del grades_data['homework_name']
+            if 'last_updated' in grades_data:
+                del grades_data['last_updated']
+            if 'created' in grades_data:
+                del grades_data['created']
+            print(f"📊 Successfully loaded grades data from MongoDB for '{self.homework_name}'")
+            return grades_data
+        
+        # If no data exists in MongoDB, return default structure
+        print(f"📝 No grades data found in MongoDB for '{self.homework_name}', creating default structure")
         return {
             "students": {},
             "submissions": []
         }
     
-    def _save_homework_data(self):
-        """Save homework configuration"""
-        with open(self.homework_file, 'w') as f:
-            json.dump(self.homework_data, f, indent=2)
-    
     def _save_grades_data(self):
-        """Save grades and submissions"""
+        """Save grades and submissions to MongoDB repository"""
         try:
-            # Add debugging to see what's being serialized
-            import json
-            
-            def check_serializable(obj, path="root"):
-                """Recursively check if object is JSON serializable"""
-                try:
-                    if hasattr(obj, 'to_dict'):  # DataFrame or similar
-                        print(f"Found DataFrame-like object at {path}")
-                        return False
-                    elif isinstance(obj, dict):
-                        for key, value in obj.items():
-                            if not check_serializable(value, f"{path}.{key}"):
-                                return False
-                    elif isinstance(obj, list):
-                        for i, value in enumerate(obj):
-                            if not check_serializable(value, f"{path}[{i}]"):
-                                return False
-                    # Try to serialize individual item
-                    json.dumps(obj)
-                    return True
-                except (TypeError, ValueError) as e:
-                    print(f"Non-serializable object at {path}: {type(obj)} - {e}")
-                    return False
-            
-            # Check before saving
-            if not check_serializable(self.grades_data):
-                print("Found non-serializable data, attempting to fix...")
-                # Don't save if there are issues
-                return
-            
-            with open(self.grades_file, 'w') as f:
-                json.dump(self.grades_data, f, indent=2)
+            # Save to MongoDB using the grade repository
+            self.container.grade_repository.save_grades(self.homework_name, self.grades_data)
+            print(f"💾 Successfully saved grades data to MongoDB for '{self.homework_name}'")
         except Exception as e:
-            print(f"Error saving grades data: {e}")
+            print(f"❌ Error saving grades data to MongoDB: {e}")
             raise
     
     def add_test_case(self, test_name: str, test_function: Callable, points: float, 
@@ -539,8 +499,14 @@ class LocalGrader:
     def clear_all_data(self):
         """Clear all grading data (use with caution!)"""
         self.grades_data = {"students": {}, "submissions": []}
-        self._save_grades_data()
-        print("⚠️ All grading data cleared!")
+        # Clear from MongoDB as well
+        try:
+            self.container.grade_repository.clear_grades(self.homework_name)
+            print("⚠️ All grading data cleared from both memory and MongoDB!")
+        except Exception as e:
+            print(f"⚠️ Grading data cleared from memory, but failed to clear from MongoDB: {e}")
+            self._save_grades_data()  # Save empty data to MongoDB
+            print("⚠️ All grading data cleared!")
 
 
 # Utility functions for creating common test types
