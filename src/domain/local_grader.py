@@ -52,6 +52,7 @@ import pandas as pd
 import numpy as np
 from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
+from models.container import Container
 
 
 class LocalGrader:
@@ -59,7 +60,7 @@ class LocalGrader:
     Main grader class for handling homework assignments, test cases, and student submissions
     """
     
-    def __init__(self, homework_name: str, data_dir: str = "grader_data"):
+    def __init__(self, homework_name: str,container: Container, data_dir: str = "grader_data"):
         """
         Initialize the grader for a specific homework assignment
         
@@ -67,6 +68,7 @@ class LocalGrader:
             homework_name: Name of the homework assignment
             data_dir: Directory to store grading data
         """
+        self.container = container
         self.homework_name = homework_name
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
@@ -75,15 +77,45 @@ class LocalGrader:
         self.homework_file = self.data_dir / f"{homework_name}_homework.json"
         self.grades_file = self.data_dir / f"{homework_name}_grades.json"
         self.tests_dir = self.data_dir / f"{homework_name}_tests"
+
+
         self.tests_dir.mkdir(exist_ok=True)
         
         # Load or initialize data
-        self.homework_data = self._load_homework_data()
+        self.homework_data = self._load_homework_data2()
         self.grades_data = self._load_grades_data()
+
+    def _load_homework_data2(self) -> Dict:
+        """Load homework configuration and metadata from MongoDB repository only"""
+        homework_data = self.container.homework_repository.get_homework(self.homework_name)
+        print("Loaded homework data from repository:", homework_data)
         
+        if homework_data:
+            # Remove MongoDB's _id field if present
+            if '_id' in homework_data:
+                del homework_data['_id']
+            print(f"📂 Successfully loaded homework data from MongoDB for '{self.homework_name}'")
+            return homework_data
+        
+        # If no data exists in MongoDB, return default structure
+        print(f"📝 No homework data found in MongoDB for '{self.homework_name}', creating default structure")
+        return {
+            "name": self.homework_name,
+            "created": datetime.datetime.now().isoformat(),
+            "test_cases": {},
+            "max_score": 0,
+            "settings": {
+                "allow_late": True,
+                "time_limit": 30,  # seconds per test
+                "partial_credit": True
+            }
+        }
+    
     def _load_homework_data(self) -> Dict:
         """Load homework configuration and metadata"""
-        if self.homework_file.exists():
+        homework_data = self.container.homework_repository.get_homework(self.homework_name)
+        print("Loaded homework data from repository:", homework_data)
+        if homework_data:
             with open(self.homework_file, 'r') as f:
                 return json.load(f)
         return {
@@ -177,13 +209,23 @@ class LocalGrader:
             "file": str(test_file),
             "created": datetime.datetime.now().isoformat()
         }
-        
+
+        # Save to repository
+        self.container.homework_repository.add_homework(
+            homework_name=self.homework_name,
+            test_name=test_name,
+            points=points,
+            description=description,
+            timeout=timeout,
+            test_file=test_file
+        )
+
         # Update max score
         self.homework_data["max_score"] = sum(
             test["points"] for test in self.homework_data["test_cases"].values()
         )
         
-        self._save_homework_data()
+        # self._save_homework_data()
         print(f"✅ Added test case '{test_name}' ({points} points)")
     
     def submit(self, student_id: str, submission_data: Dict[str, Any]) -> Dict:

@@ -1,5 +1,5 @@
-from submission import Submission
-from local_grader import LocalGrader
+from models.submission import Submission
+from domain.local_grader import LocalGrader
 
 
 class Student:
