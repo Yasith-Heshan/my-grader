@@ -70,11 +70,16 @@ class LocalGrader:
         # Only create data_dir when needed for exports
         self.data_dir = Path(data_dir)
         
-        # Initialize database managers
-        self.db_manager = get_db_manager()
-        self.homework_manager = HomeworkDataManager(self.db_manager)
-        self.grades_manager = GradesDataManager(self.db_manager)
-        self.test_manager = TestCaseManager(self.db_manager)
+        # Initialize database managers using new architecture
+        from database_factory import DatabaseManagerFactory
+        
+        self.homework_manager, self.grades_manager, self.test_manager = (
+            DatabaseManagerFactory.get_managers(homework_name)
+        )
+        
+        # Get the adapter for use cases
+        self.adapter = DatabaseManagerFactory.get_adapter(homework_name)
+        self.grading_use_cases = self.adapter.grading_use_cases
         
         # Load or initialize data from MongoDB
         self.homework_data = self.homework_manager.load_homework_data(homework_name)
@@ -95,7 +100,7 @@ class LocalGrader:
     def add_test_case(self, test_name: str, test_function: Callable, points: float, 
                       description: str = "", timeout: float = 30):
         """
-        Add a test case to the homework
+        Add a test case to the homework using new architecture
         
         Args:
             test_name: Unique name for the test
@@ -104,33 +109,31 @@ class LocalGrader:
             description: Human-readable description
             timeout: Maximum time allowed for test execution
         """
-        # Save test function to MongoDB
-        success = self.test_manager.save_test_function(
-            self.homework_name, test_name, test_function, points, description, timeout
+        from test_case import TestCase
+        
+        # Create test case object  
+        test_case = TestCase(
+            name=test_name,
+            test_function=test_function,
+            points=points,
+            description=description
         )
+        test_case.timeout = timeout  # Add timeout as attribute
         
-        if not success:
-            raise RuntimeError(f"Failed to save test function '{test_name}' to database")
+        # Use the test case use cases
+        result = self.adapter.test_case_use_cases.add_test_case(self.homework_name, test_case)
         
-        # Store test metadata in homework configuration
-        self.homework_data["test_cases"][test_name] = {
-            "points": points,
-            "description": description,
-            "timeout": timeout,
-            "created": datetime.datetime.now().isoformat()
-        }
+        if not result["success"]:
+            raise RuntimeError(result["message"])
         
-        # Update max score
-        self.homework_data["max_score"] = sum(
-            test["points"] for test in self.homework_data["test_cases"].values()
-        )
+        # Refresh homework data
+        self.homework_data = self.homework_manager.load_homework_data(self.homework_name)
         
-        self._save_homework_data()
-        print(f"✅ Added test case '{test_name}' ({points} points)")
+        print(result["message"])
     
     def submit(self, student_id: str, submission_data: Dict[str, Any]) -> Dict:
         """
-        Submit and grade student work
+        Submit and grade student work using new architecture
         
         Args:
             student_id: Unique identifier for the student
@@ -139,85 +142,37 @@ class LocalGrader:
         Returns:
             Grading results with detailed feedback
         """
-        submission_time = datetime.datetime.now().isoformat()
+        from submission import Submission
         
-        # Initialize student record if not exists
-        if student_id not in self.grades_data["students"]:
-            self.grades_data["students"][student_id] = {
-                "submissions": [],
-                "best_score": 0,
-                "best_submission": None
-            }
-        
-        # Grade the submission
-        results = self._grade_submission(submission_data)
-        
-        # Calculate total score
-        total_score = sum(result["points_earned"] for result in results.values())
-        percentage = (total_score / self.homework_data["max_score"]) * 100 if self.homework_data["max_score"] > 0 else 0
-        
-        # Prepare safe submission data (exclude functions and non-serializable data)
-        safe_submission_data = {}
+        # Create submission object
+        submission = Submission()
         for key, value in submission_data.items():
-            if not callable(value):
-                # Convert DataFrames to dict for JSON serialization
-                if hasattr(value, 'to_dict'):
-                    safe_submission_data[key] = f"<DataFrame: {value.shape[0]} rows, {value.shape[1]} columns>"
-                else:
-                    safe_submission_data[key] = value
-            else:
-                safe_submission_data[key] = f"<function: {key}>"
+            submission.add_submission_item(key, value)
         
-        # Prepare safe results (exclude non-serializable data)
-        safe_results = {}
-        for test_name, result in results.items():
-            safe_results[test_name] = {
-                "points_possible": result["points_possible"],
-                "points_earned": result["points_earned"],
-                "status": result["status"],
-                "feedback": str(result["feedback"]),  # Convert to string to be safe
-                "execution_time": result["execution_time"],
-                "description": result["description"]
+        # Use the new grading use cases
+        result = self.grading_use_cases.grade_submission(
+            self.homework_name, student_id, submission
+        )
+        
+        if not result["success"]:
+            return {
+                "student_id": student_id,
+                "total_score": 0,
+                "max_score": self.homework_data["max_score"],
+                "percentage": 0,
+                "test_results": {},
+                "submission_time": datetime.datetime.now().isoformat(),
+                "error": result.get("message", "Unknown error")
             }
         
-        submission_record = {
-            "submission_time": submission_time,
-            "total_score": total_score,
-            "max_score": self.homework_data["max_score"],
-            "percentage": percentage,
-            "results": safe_results,
-            "submission_data": safe_submission_data
-        }
-        
-        # Save submission to MongoDB
-        self.grades_manager.save_submission(self.homework_name, student_id, submission_record)
-        
-        # Update in-memory grades data for compatibility
-        if student_id not in self.grades_data["students"]:
-            self.grades_data["students"][student_id] = {"submissions": []}
-        
-        self.grades_data["students"][student_id]["submissions"].append(submission_record)
-        if "best_score" not in self.grades_data["students"][student_id] or total_score > self.grades_data["students"][student_id]["best_score"]:
-            self.grades_data["students"][student_id]["best_score"] = total_score
-            self.grades_data["students"][student_id]["best_submission"] = submission_record
-        
-        # Add to global submissions log
-        if "submissions" not in self.grades_data:
-            self.grades_data["submissions"] = []
-        self.grades_data["submissions"].append({
-            "student_id": student_id,
-            "submission_time": submission_time,
-            "score": total_score,
-            "percentage": percentage
-        })
-        
+        # Return in the expected format
         return {
             "student_id": student_id,
-            "total_score": total_score,
-            "max_score": self.homework_data["max_score"],
-            "percentage": percentage,
-            "test_results": results,
-            "submission_time": submission_time
+            "total_score": result["total_score"],
+            "max_score": result["max_score"],
+            "percentage": result["percentage"],
+            "test_results": result["test_results"],
+            "submission_time": datetime.datetime.now().isoformat()
         }
     
     def _grade_submission(self, submission_data: Dict[str, Any]) -> Dict:
