@@ -8,14 +8,14 @@ import traceback
 from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
 
-from database_interfaces import (
+from ..database.repositories.interfaces.database_interfaces import (
     TestCaseRepositoryInterface,
     HomeworkRepositoryInterface, 
     SubmissionRepositoryInterface,
     GradesRepositoryInterface
 )
-from test_case import TestCase
-from submission import Submission
+from ..core.models.test_case import TestCase
+from ..core.models.submission import Submission
 
 
 class TestCaseUseCases:

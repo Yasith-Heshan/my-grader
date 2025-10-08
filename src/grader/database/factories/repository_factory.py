@@ -4,21 +4,21 @@ Implements factory pattern for creating and managing repository instances
 """
 
 from typing import Optional
-from database_adapter_interfaces import DatabaseAdapterInterface
-from database_interfaces import (
+from ..adapters.database_adapter_interfaces import DatabaseAdapterInterface
+from ..repositories.interfaces.database_interfaces import (
     TestCaseRepositoryInterface,
     HomeworkRepositoryInterface,
     SubmissionRepositoryInterface,
     GradesRepositoryInterface
 )
-from repositories import (
+from ..repositories.repositories import (
     TestCaseRepository,
     HomeworkRepository,
     SubmissionRepository,
     GradesRepository
 )
-from mongodb_adapter import MongoDBAdapter
-from use_cases import TestCaseUseCases, GradingUseCases, HomeworkUseCases
+from ..adapters.mongodb_adapter import MongoDBAdapter
+from ...business.use_cases import TestCaseUseCases, GradingUseCases, HomeworkUseCases
 
 
 class RepositoryFactory:

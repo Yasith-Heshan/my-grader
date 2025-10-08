@@ -1,12 +1,2 @@
-from local_grader import LocalGrader
-
-
-class Assignment:
-    grader:LocalGrader
-    
-    def __init__(self, name:str):
-        self.name = name
-        self.grader = LocalGrader(name)
-    
-    def get_grader(self):
-        return self.grader
+# Backward compatibility - Assignment class
+from src.grader.core.models.assignment import Assignment

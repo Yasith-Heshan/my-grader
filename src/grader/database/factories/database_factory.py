@@ -4,7 +4,7 @@ Factory for creating database manager instances using the new architecture
 """
 
 from typing import Dict, Optional
-from pure_database_adapter import (
+from ..adapters.pure_database_adapter import (
     PureDatabaseAdapter, 
     TestCaseManager, 
     HomeworkDataManager, 

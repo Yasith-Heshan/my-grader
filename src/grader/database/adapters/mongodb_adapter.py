@@ -11,7 +11,7 @@ from pymongo.collection import Collection
 from pymongo.database import Database
 from dotenv import load_dotenv
 
-from database_adapter_interfaces import DatabaseAdapterInterface
+from .database_adapter_interfaces import DatabaseAdapterInterface
 
 # Load environment variables
 load_dotenv()

@@ -8,13 +8,13 @@ import logging
 from typing import Dict, List, Optional, Any, Callable
 from datetime import datetime
 
-from database_interfaces import (
+from .interfaces.database_interfaces import (
     TestCaseRepositoryInterface, 
     HomeworkRepositoryInterface,
     SubmissionRepositoryInterface,
     GradesRepositoryInterface
 )
-from database_adapter_interfaces import DatabaseAdapterInterface
+from ..adapters.database_adapter_interfaces import DatabaseAdapterInterface
 
 
 class TestCaseRepository(TestCaseRepositoryInterface):

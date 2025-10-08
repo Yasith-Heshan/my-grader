@@ -4,10 +4,10 @@ A minimal adapter that wraps the new architecture but maintains backward compati
 """
 
 from typing import Dict, List, Optional, Any, Callable
-from repository_factory import get_repository_factory
-from use_cases import TestCaseUseCases, GradingUseCases, HomeworkUseCases
-from test_case import TestCase
-from submission import Submission
+from ..factories.repository_factory import get_repository_factory
+from ...business.use_cases import TestCaseUseCases, GradingUseCases, HomeworkUseCases
+from ...core.models.test_case import TestCase
+from ...core.models.submission import Submission
 
 
 class PureDatabaseAdapter:
