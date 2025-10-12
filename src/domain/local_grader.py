@@ -44,6 +44,7 @@ Features:
 import json
 import os
 import pickle
+import base64
 import datetime
 import time
 import traceback
@@ -156,28 +157,27 @@ class LocalGrader:
             description: Human-readable description
             timeout: Maximum time allowed for test execution
         """
-        # Save test function as pickle
-        test_file = self.tests_dir / f"{test_name}.pkl"
-        with open(test_file, 'wb') as f:
-            pickle.dump(test_function, f)
+        
+        # Serialize test function to store in MongoDB
+        serialized_function = base64.b64encode(pickle.dumps(test_function)).decode('utf-8')
         
         # Store test metadata
         self.homework_data["test_cases"][test_name] = {
             "points": points,
             "description": description,
             "timeout": timeout,
-            "file": str(test_file),
+            "serialized_function": serialized_function,
             "created": datetime.datetime.now().isoformat()
         }
 
-        # Save to repository
+        # Save to repository with serialized function
         self.container.homework_repository.add_homework(
             homework_name=self.homework_name,
             test_name=test_name,
             points=points,
             description=description,
             timeout=timeout,
-            test_file=test_file
+            serialized_function=serialized_function
         )
 
         # Update max score
@@ -185,8 +185,7 @@ class LocalGrader:
             test["points"] for test in self.homework_data["test_cases"].values()
         )
         
-        # self._save_homework_data()
-        print(f"✅ Added test case '{test_name}' ({points} points)")
+        print(f"✅ Added test case '{test_name}' ({points} points) to MongoDB")
     
     def submit(self, student_id: str, submission_data: Dict[str, Any]) -> Dict:
         """
@@ -288,9 +287,17 @@ class LocalGrader:
         
         for test_name, test_info in self.homework_data["test_cases"].items():
             try:
-                # Load test function
-                with open(test_info["file"], 'rb') as f:
-                    test_function = pickle.load(f)
+                # Get test function from MongoDB (deserialize from base64 encoded string)
+                if "serialized_function" in test_info:
+                    # New MongoDB-stored test function
+                    serialized_data = base64.b64decode(test_info["serialized_function"].encode('utf-8'))
+                    test_function = pickle.loads(serialized_data)
+                elif "file" in test_info:
+                    # Legacy file-based test function (for backward compatibility)
+                    with open(test_info["file"], 'rb') as f:
+                        test_function = pickle.load(f)
+                else:
+                    raise ValueError(f"No test function found for {test_name}")
                 
                 # Run test with timeout
                 start_time = time.time()

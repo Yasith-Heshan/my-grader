@@ -7,7 +7,7 @@ class HomeworkRepository:
         self.db_adapter = db_adapter
         self.collection = COLLECTION_HOMEWORKS  # From constants.py
 
-    def add_homework(self, homework_name, test_name, points, description, timeout, test_file):
+    def add_homework(self, homework_name, test_name, points, description, timeout, serialized_function):
         """
         Add or update a homework assignment in MongoDB with the same structure as the JSON file
         """
@@ -20,7 +20,7 @@ class HomeworkRepository:
                 "points": points,
                 "description": description,
                 "timeout": timeout,
-                "file": str(test_file),
+                "serialized_function": serialized_function,
                 "created": datetime.datetime.now().isoformat()
             }
             
@@ -42,7 +42,7 @@ class HomeworkRepository:
                         "points": points,
                         "description": description,
                         "timeout": timeout,
-                        "file": str(test_file),
+                        "serialized_function": serialized_function,
                         "created": datetime.datetime.now().isoformat()
                     }
                 },
