@@ -1,5 +1,5 @@
-from utils.constants import COLLECTION_GRADES
-from external.adapters.database_interface import DatabaseInterface
+from src.utils.constants import COLLECTION_GRADES
+from src.external.adapters.database_interface import DatabaseInterface
 import datetime
 
 class GradeRepository:

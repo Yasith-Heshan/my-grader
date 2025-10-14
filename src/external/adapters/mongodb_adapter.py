@@ -1,4 +1,4 @@
-from external.adapters.database_interface import DatabaseInterface
+from src.external.adapters.database_interface import DatabaseInterface
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv

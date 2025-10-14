@@ -1,5 +1,5 @@
-from external.repository.homework_repository import HomeworkRepository
-from external.repository.grade_repository import GradeRepository
+from src.external.repository.homework_repository import HomeworkRepository
+from src.external.repository.grade_repository import GradeRepository
 
 class Container:
     def __init__(self,

@@ -1,5 +1,5 @@
-from utils.constants import COLLECTION_HOMEWORKS
-from external.adapters.database_interface import DatabaseInterface
+from src.utils.constants import COLLECTION_HOMEWORKS
+from src.external.adapters.database_interface import DatabaseInterface
 import datetime
 
 class HomeworkRepository:

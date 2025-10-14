@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify
-from local_grader import LocalGrader
-from student import Student
-from teacher import Teacher
-from test_case import TestCase
-from submission import Submission
+from src.domain.local_grader import LocalGrader
+from src.external.adapters.database_interface import DatabaseInterface
+from src.external.adapters.mongodb_adapter import MongoDBAdapter
+from src.external.repository.grade_repository import GradeRepository
+from src.external.repository.homework_repository import HomeworkRepository
+from src.models.container import Container
+from src.models.student import Student
+from src.models.teacher import Teacher
+from src.models.test_case import TestCase
+from src.models.submission import Submission
 import dill
 import base64
 
@@ -12,11 +17,16 @@ app = Flask(__name__)
 # Store grader instances
 graders = {}
 
+mongoAdapter:DatabaseInterface = MongoDBAdapter()
+homework_repository = HomeworkRepository(mongoAdapter)
+grader_repository = GradeRepository(mongoAdapter)
+container = Container(homework_repository, grader_repository)
+
 def get_or_create_grader(homework_name, data_dir="grader_data"):
     """Get an existing grader or create a new one"""
     key = f"{homework_name}_{data_dir}"
     if key not in graders:
-        graders[key] = LocalGrader(homework_name, data_dir)
+        graders[key] = LocalGrader(homework_name, container, data_dir)
     return graders[key]
 
 # Student endpoints

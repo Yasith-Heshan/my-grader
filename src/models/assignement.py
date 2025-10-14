@@ -1,5 +1,5 @@
-from models.container import Container
-from domain.local_grader import LocalGrader
+from src.models.container import Container
+from src.domain.local_grader import LocalGrader
 
 
 class Assignment:
