@@ -3,7 +3,7 @@ Comprehensive Test Suite for Local Grader System
 Demonstrates all advanced features and capabilities
 """
 
-from local_grader import LocalGrader, create_function_test, create_dataframe_test
+from src.domain.local_grader import LocalGrader, create_function_test, create_dataframe_test
 import pandas as pd
 import numpy as np
 import time

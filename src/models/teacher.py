@@ -1,5 +1,5 @@
-from local_grader import LocalGrader
-from test_case import TestCase
+from src.domain.local_grader import LocalGrader
+from src.models.test_case import TestCase
 
 
 
