@@ -43,7 +43,7 @@ Features:
 
 import json
 import os
-import pickle
+import dill
 import datetime
 import time
 import traceback
@@ -164,10 +164,10 @@ class LocalGrader:
             description: Human-readable description
             timeout: Maximum time allowed for test execution
         """
-        # Save test function as pickle
+        # Save test function as dill
         test_file = self.tests_dir / f"{test_name}.pkl"
         with open(test_file, 'wb') as f:
-            pickle.dump(test_function, f)
+            dill.dump(test_function, f)
         
         # Store test metadata
         self.homework_data["test_cases"][test_name] = {
@@ -288,8 +288,8 @@ class LocalGrader:
             try:
                 # Load test function
                 with open(test_info["file"], 'rb') as f:
-                    test_function = pickle.load(f)
-                
+                    test_function = dill.load(f)
+
                 # Run test with timeout
                 start_time = time.time()
                 
@@ -549,7 +549,7 @@ def create_function_test(function_name: str, test_cases: List[Dict],
         feedback = f"Passed {passed}/{total} test cases\n" + "\n".join(feedback_parts)
         
         return {"score": score, "feedback": feedback}
-    
+
     return test_function
 
 
