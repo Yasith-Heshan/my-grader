@@ -54,6 +54,7 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
 from models.container import Container
+from utils.sandbox import SecureSandbox, create_sandbox
 
 
 class LocalGrader:
@@ -73,6 +74,9 @@ class LocalGrader:
         self.homework_name = homework_name
         self.data_dir = Path(data_dir)
         self.data_dir.mkdir(exist_ok=True)
+        
+        # Initialize secure sandbox
+        self.sandbox = create_sandbox(memory_limit_mb=128, cpu_time_limit=10)
         
         # File paths
         self.tests_dir = self.data_dir / f"{homework_name}_tests"
@@ -371,7 +375,7 @@ class LocalGrader:
     
     def _run_test_with_timeout(self, test_function: Callable, submission_data: Dict, timeout: float):
         """
-        Run a test function with timeout protection
+        Run a test function with secure sandbox protection
         
         Args:
             test_function: The test to run
@@ -381,12 +385,180 @@ class LocalGrader:
         Returns:
             Test result
         """
-        # Simple timeout for Windows compatibility
-        start_time = time.time()
-        result = test_function(submission_data)
-        if time.time() - start_time > timeout:
-            raise TimeoutError("Test execution timed out")
-        return result
+        # Use secure sandbox to execute the test function
+        execution_result = self.sandbox.execute_function_safely(
+            test_function, 
+            submission_data, 
+            timeout=timeout
+        )
+        
+        if execution_result['success']:
+            return execution_result['result']
+        else:
+            # Convert sandbox errors to appropriate exceptions
+            error_msg = execution_result['error']
+            if 'timeout' in error_msg.lower():
+                raise TimeoutError(f"Test execution timed out: {error_msg}")
+            elif 'memory' in error_msg.lower():
+                raise MemoryError(f"Test execution exceeded memory limit: {error_msg}")
+            else:
+                raise RuntimeError(f"Test execution failed: {error_msg}")
+    
+    def submit_with_sandbox_validation(self, student_id: str, submission_code: str) -> Dict:
+        """
+        Submit and grade student work with comprehensive security validation
+        
+        Args:
+            student_id: Unique identifier for the student
+            submission_code: Student's code as string
+            
+        Returns:
+            Grading results with detailed feedback and security information
+        """
+        submission_time = datetime.datetime.now().isoformat()
+        
+        # Step 1: Validate the submission code using sandbox
+        print(f"🔍 Validating submission from {student_id}...")
+        validation_result = self.sandbox.execute_student_code(submission_code, timeout=30)
+        
+        if not validation_result['success']:
+            # Return security violation result
+            security_result = {
+                "student_id": student_id,
+                "total_score": 0,
+                "max_score": self.homework_data["max_score"],
+                "percentage": 0,
+                "submission_time": submission_time,
+                "security_violation": True,
+                "error": validation_result['error'],
+                "violations": validation_result.get('violations', []),
+                "test_results": {}
+            }
+            
+            # Log the security violation
+            print(f"🚨 SECURITY VIOLATION from {student_id}:")
+            for violation in validation_result.get('violations', []):
+                print(f"   ❌ {violation}")
+            
+            return security_result
+        
+        # Step 2: Extract functions from validated namespace
+        validated_namespace = validation_result['namespace']
+        
+        # Create submission_data from the safe namespace
+        submission_data = {}
+        for key, value in validated_namespace.items():
+            if callable(value) and not key.startswith('__'):
+                submission_data[key] = value
+            elif not key.startswith('__') and key not in ['math']:  # Exclude built-ins
+                submission_data[key] = value
+        
+        print(f"✅ Code validation passed. Found {len(submission_data)} submission items.")
+        
+        # Step 3: Grade using existing method
+        return self._grade_submission_secure(student_id, submission_data, submission_time, validation_result)
+    
+    def _grade_submission_secure(self, student_id: str, submission_data: Dict, 
+                                submission_time: str, validation_result: Dict) -> Dict:
+        """
+        Grade a validated submission with security information
+        
+        Args:
+            student_id: Student identifier
+            submission_data: Validated submission data
+            submission_time: Submission timestamp
+            validation_result: Security validation results
+            
+        Returns:
+            Grading results with security information
+        """
+        # Initialize student record if needed
+        if student_id not in self.grades_data["students"]:
+            self.grades_data["students"][student_id] = {
+                "submissions": [],
+                "best_score": 0,
+                "best_submission": None
+            }
+        
+        # Grade the submission
+        results = self._grade_submission(submission_data)
+        
+        # Calculate scores
+        total_score = sum(result["points_earned"] for result in results.values())
+        percentage = (total_score / self.homework_data["max_score"]) * 100 if self.homework_data["max_score"] > 0 else 0
+        
+        # Prepare submission record with security info
+        submission_record = {
+            "submission_time": submission_time,
+            "total_score": total_score,
+            "max_score": self.homework_data["max_score"],
+            "percentage": percentage,
+            "results": results,
+            "security_validated": True,
+            "security_execution_time": validation_result['execution_time'],
+            "security_checks_passed": validation_result.get('security_checks_passed', True)
+        }
+        
+        # Update student records
+        self.grades_data["students"][student_id]["submissions"].append(submission_record)
+        if total_score > self.grades_data["students"][student_id]["best_score"]:
+            self.grades_data["students"][student_id]["best_score"] = total_score
+            self.grades_data["students"][student_id]["best_submission"] = submission_record
+        
+        # Add to global submissions log
+        self.grades_data["submissions"].append({
+            "student_id": student_id,
+            "submission_time": submission_time,
+            "score": total_score,
+            "percentage": percentage,
+            "security_validated": True
+        })
+        
+        self._save_grades_data()
+        
+        print(f"✅ Grading completed for {student_id}: {total_score}/{self.homework_data['max_score']} ({percentage:.1f}%)")
+        
+        return {
+            "student_id": student_id,
+            "total_score": total_score,
+            "max_score": self.homework_data["max_score"],
+            "percentage": percentage,
+            "test_results": results,
+            "submission_time": submission_time,
+            "security_validated": True,
+            "security_execution_time": validation_result['execution_time']
+        }
+    
+    def submit_secure(self, student_id: str, submission: 'Submission') -> Dict:
+        """
+        Submit and grade student work using Submission object with security validation
+        
+        Args:
+            student_id: Unique identifier for the student
+            submission: Submission object containing source code
+            
+        Returns:
+            Grading results with security validation
+        """
+        from models.submission import Submission
+        
+        # Check if submission has secure source code
+        if not submission.has_secure_submissions():
+            raise ValueError("Submission object must contain source code for secure validation. "
+                           "Use add_submission_item_secure() to add code strings.")
+        
+        # Get source code submissions
+        secure_submissions = submission.get_secure_submission()
+        
+        # Combine all source code into one string for validation
+        combined_code = ""
+        for item_name, code_string in secure_submissions.items():
+            combined_code += f"\n# {item_name}\n{code_string}\n"
+        
+        print(f"🔒 Secure submission from {student_id} with {len(secure_submissions)} code items")
+        
+        # Use existing secure validation method
+        return self.submit_with_sandbox_validation(student_id, combined_code)
     
     def get_grades(self, student_id: Optional[str] = None) -> Dict:
         """
