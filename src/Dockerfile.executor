@@ -1,0 +1,10 @@
+FROM python:3.12-alpine
+
+# Install dill for function serialization
+RUN pip install --no-cache-dir dill
+
+# Set working directory
+WORKDIR /code
+
+# Default command
+CMD ["python"]
