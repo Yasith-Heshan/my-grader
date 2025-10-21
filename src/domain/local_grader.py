@@ -54,6 +54,7 @@ import numpy as np
 from typing import Any, Dict, List, Optional, Callable, Union
 from pathlib import Path
 from models.container import Container
+from security.docker_executor import DockerExecutor
 
 
 class LocalGrader:
@@ -371,7 +372,7 @@ class LocalGrader:
     
     def _run_test_with_timeout(self, test_function: Callable, submission_data: Dict, timeout: float):
         """
-        Run a test function with timeout protection
+        Run a test function with timeout protection using Docker
         
         Args:
             test_function: The test to run
@@ -380,13 +381,31 @@ class LocalGrader:
             
         Returns:
             Test result
+            
+        Raises:
+            TimeoutError: If execution exceeds timeout
+            RuntimeError: If Docker execution fails
         """
-        # Simple timeout for Windows compatibility
-        start_time = time.time()
-        result = test_function(submission_data)
-        if time.time() - start_time > timeout:
-            raise TimeoutError("Test execution timed out")
-        return result
+        # Initialize Docker executor if not already done
+        if not hasattr(self, '_docker_executor'):
+            self._docker_executor = DockerExecutor(
+                timeout=int(timeout),
+                memory_limit='256m',  # Limit memory
+                cpu_quota=50000       # Limit to 50% CPU
+            )
+        
+        # Execute in Docker
+        result = self._docker_executor.execute(test_function, submission_data)
+        
+        # Check result
+        if not result['success']:
+            error = result.get('error', 'Unknown error')
+            if 'Timeout' in error or 'timeout' in error:
+                raise TimeoutError(f"Test execution timed out: {error}")
+            else:
+                raise RuntimeError(f"Test execution failed: {error}")
+        
+        return result['result']
     
     def get_grades(self, student_id: Optional[str] = None) -> Dict:
         """

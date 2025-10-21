@@ -4,6 +4,7 @@ Runs Python functions inside isolated Docker containers
 """
 
 import docker
+import docker.errors
 import json
 import base64
 import dill
@@ -100,6 +101,7 @@ class DockerExecutor:
                     self.image,
                     f'python /code/executor.py {json.dumps(input_json)}',
                     volumes={tmpdir: {'bind': '/code', 'mode': 'ro'}},
+                    tmpfs={'/tmp': 'size=10M,mode=1777'},
                     detach=True,
                     network_disabled=True,
                     read_only=True,
@@ -109,17 +111,38 @@ class DockerExecutor:
                 )
 
                 try:
-                    container.wait(timeout=self.timeout)
+                    wait_result = container.wait(timeout=self.timeout)
                     logs = container.logs().decode('utf-8')
-                    container.remove()
+                    
+                    # Clean up container
+                    try:
+                        container.remove()
+                    except docker.errors.NotFound:
+                        pass  # Already removed
+                    
                     return json.loads(logs)
-                except:
-                    container.stop()
-                    container.remove()
+                    
+                except Exception as timeout_error:
+                    # Try to stop and cleanup container on timeout
+                    try:
+                        container.stop()
+                    except docker.errors.NotFound:
+                        pass  # Container already stopped
+                    except Exception:
+                        pass  # Ignore other errors
+                    
+                    try:
+                        container.remove()
+                    except docker.errors.NotFound:
+                        pass  # Container already removed
+                    except Exception:
+                        pass  # Ignore other errors
+                    
                     return {
                         "success": False,
                         "result": None,
                         "error": f"Timeout after {self.timeout}s"
                     }
+                    
         except Exception as e:
             return {"success": False, "result": None, "error": str(e)}
