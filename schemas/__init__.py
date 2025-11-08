@@ -2,7 +2,7 @@
 Pydantic schemas package
 """
 from .assignment import (
-    AssignmentCreate, AssignmentResponse, AssignmentSummary
+    AssignmentCreate, AssignmentResponse, AssignmentSummary, StudentResult
 )
 from .test_case import (
     TestCaseCreate, TestCaseResponse, QuestionCreate
@@ -16,7 +16,7 @@ from .user import (
 )
 
 __all__ = [
-    "AssignmentCreate", "AssignmentResponse", "AssignmentSummary",
+    "AssignmentCreate", "AssignmentResponse", "AssignmentSummary", "StudentResult",
     "TestCaseCreate", "TestCaseResponse", "QuestionCreate",
     "SubmissionCreate", "SubmissionResponse", "SubmissionItemCreate",
     "SubmissionItemResponse", "GradingResult",

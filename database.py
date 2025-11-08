@@ -4,10 +4,7 @@ Database configuration and connection management for MongoDB
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from typing import Optional
-
-# MongoDB settings
-MONGODB_URL = "mongodb://localhost:27017"
-DATABASE_NAME = "grading_system"
+from config import settings
 
 # Global client instance
 mongodb_client: Optional[AsyncIOMotorClient] = None
@@ -19,8 +16,8 @@ async def connect_to_mongo():
     # Import all models for Beanie initialization
     from models import Assignment, TestCase, Submission, SubmissionItem, Teacher, Student
     
-    mongodb_client = AsyncIOMotorClient(MONGODB_URL)
-    database = mongodb_client[DATABASE_NAME]
+    mongodb_client = AsyncIOMotorClient(settings.mongodb_url)
+    database = mongodb_client[settings.database_name]
     
     await init_beanie(
         database=database,
@@ -33,7 +30,7 @@ async def connect_to_mongo():
             Student
         ]
     )
-    print(f"Connected to MongoDB: {DATABASE_NAME}")
+    print(f"Connected to MongoDB: {settings.database_name}")
 
 async def close_mongo_connection():
     """Close MongoDB connection"""

@@ -3,6 +3,7 @@ Student API routes
 """
 from fastapi import APIRouter, HTTPException, status
 from typing import List, Optional
+from beanie import Document
 
 from schemas import (
     SubmissionCreate, SubmissionResponse, SubmissionItemCreate,
@@ -13,19 +14,43 @@ from services import submission_service, student_service, assignment_service
 
 router = APIRouter()
 
+def serialize_document(doc: Document) -> dict:
+    """Convert Beanie Document to dict with ObjectId as string"""
+    data = doc.model_dump()
+    if doc.id:
+        data["_id"] = str(doc.id)
+    return data
+
+def serialize_documents(docs: List[Document]) -> List[dict]:
+    """Convert list of Beanie Documents to list of dicts"""
+    return [serialize_document(doc) for doc in docs]
+
 # Student Management
 @router.post("/register", response_model=StudentResponse, status_code=status.HTTP_201_CREATED)
 async def register_student(student: StudentCreate):
     """Register a new student"""
-    return await student_service.create_student(student)
+    try:
+        result = await student_service.create_student(student)
+        return serialize_document(result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to register student: {str(e)}")
 
 @router.get("/students/{student_id}", response_model=StudentResponse)
 async def get_student(student_id: str):
     """Get student by ID"""
-    student = await student_service.get_student(student_id)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-    return student
+    try:
+        student = await student_service.get_student(student_id)
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+        return student
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get student: {str(e)}")
 
 # Assignment Browsing
 @router.get("/assignments", response_model=List[AssignmentResponse])
@@ -34,7 +59,10 @@ async def list_available_assignments(
     limit: int = 100,
 ):
     """List all available assignments"""
-    return await assignment_service.list_assignments(None, skip, limit)
+    try:
+        return await assignment_service.list_assignments(None, skip, limit)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to list assignments: {str(e)}")
 
 @router.get("/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_assignment_details(assignment_id: str):
@@ -48,17 +76,23 @@ async def get_assignment_details(assignment_id: str):
 @router.post("/submissions", response_model=SubmissionResponse, status_code=status.HTTP_201_CREATED)
 async def create_submission(submission: SubmissionCreate):
     """Create a new submission for an assignment"""
-    # Verify assignment exists
-    assignment = await assignment_service.get_assignment(submission.assignment_id)
-    if not assignment:
-        raise HTTPException(status_code=404, detail="Assignment not found")
-    
-    # Verify student exists
-    student = await student_service.get_student(submission.student_id)
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
-    
-    return await submission_service.create_submission(submission)
+    try:
+        # Verify assignment exists
+        assignment = await assignment_service.get_assignment(submission.assignment_id)
+        if not assignment:
+            raise HTTPException(status_code=404, detail="Assignment not found")
+        
+        # Verify student exists
+        student = await student_service.get_student(submission.student_id)
+        if not student:
+            raise HTTPException(status_code=404, detail="Student not found")
+        
+        result = await submission_service.create_submission(submission)
+        return serialize_document(result)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create submission: {str(e)}")
 
 @router.get("/submissions/{submission_id}", response_model=SubmissionResponse)
 async def get_submission(submission_id: str):

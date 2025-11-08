@@ -1,0 +1,65 @@
+{
+  "assignment1_submissions": [
+    {
+      "student_email": "alice.williams@student.edu",
+      "cells": [
+        {
+          "cell_id": "cell_1",
+          "code": "x = 10"
+        },
+        {
+          "cell_id": "cell_2",
+          "code": "result = 6 * 7"
+        },
+        {
+          "cell_id": "cell_3",
+          "code": "name = 'Alice Williams'"
+        },
+        {
+          "cell_id": "cell_4",
+          "code": "sum_value = 5 + 10"
+        }
+      ]
+    },
+    {
+      "student_email": "bob.martinez@student.edu",
+      "cells": [
+        {
+          "cell_id": "cell_1",
+          "code": "x = 10"
+        },
+        {
+          "cell_id": "cell_2",
+          "code": "result = 42"
+        },
+        {
+          "cell_id": "cell_3",
+          "code": "name = \"Bob Martinez\""
+        },
+        {
+          "cell_id": "cell_4",
+          "code": "sum_value = 15"
+        }
+      ]
+    }
+  ],
+  "assignment2_submissions": [
+    {
+      "student_email": "alice.williams@student.edu",
+      "cells": [
+        {
+          "cell_id": "cell_1",
+          "code": "def greet(name):\n    return f'Hello, {name}!'"
+        },
+        {
+          "cell_id": "cell_2",
+          "code": "def add(a, b):\n    return a + b"
+        },
+        {
+          "cell_id": "cell_3",
+          "code": "def is_even(n):\n    return n % 2 == 0"
+        }
+      ]
+    }
+  ]
+}
