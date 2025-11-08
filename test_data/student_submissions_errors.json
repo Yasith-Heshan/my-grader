@@ -1,51 +1,51 @@
 {
-  "assignment1_submissions": [
-    {
-      "student_email": "ethan.brown@student.edu",
-      "cells": [
+    "assignment1_submissions": [
         {
-          "cell_id": "cell_1",
-          "code": "y = 10",
-          "note": "Wrong variable name"
-        },
-        {
-          "cell_id": "cell_2",
-          "code": "result = '42'",
-          "note": "String instead of integer"
-        },
-        {
-          "cell_id": "cell_3",
-          "code": "name = 123",
-          "note": "Integer instead of string"
-        },
-        {
-          "cell_id": "cell_4",
-          "code": "total = 5 + 10",
-          "note": "Wrong variable name"
+            "student_email": "ethan.brown@student.edu",
+            "cells": [
+                {
+                    "cell_id": "cell_1",
+                    "code": "y = 10",
+                    "note": "Wrong variable name"
+                },
+                {
+                    "cell_id": "cell_2",
+                    "code": "result = '42'",
+                    "note": "String instead of integer"
+                },
+                {
+                    "cell_id": "cell_3",
+                    "code": "name = 123",
+                    "note": "Integer instead of string"
+                },
+                {
+                    "cell_id": "cell_4",
+                    "code": "total = 5 + 10",
+                    "note": "Wrong variable name"
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "assignment2_submissions": [
-    {
-      "student_email": "ethan.brown@student.edu",
-      "cells": [
+    ],
+    "assignment2_submissions": [
         {
-          "cell_id": "cell_1",
-          "code": "def greet():\n    return 'Hello!'",
-          "note": "Missing parameter"
-        },
-        {
-          "cell_id": "cell_2",
-          "code": "def add(a, b):\n    print(a + b)",
-          "note": "Prints instead of returns"
-        },
-        {
-          "cell_id": "cell_3",
-          "code": "def is_odd(n):\n    return n % 2 != 0",
-          "note": "Wrong function name - checks odd not even"
+            "student_email": "ethan.brown@student.edu",
+            "cells": [
+                {
+                    "cell_id": "cell_1",
+                    "code": "def greet():\n    return 'Hello!'",
+                    "note": "Missing parameter"
+                },
+                {
+                    "cell_id": "cell_2",
+                    "code": "def add(a, b):\n    print(a + b)",
+                    "note": "Prints instead of returns"
+                },
+                {
+                    "cell_id": "cell_3",
+                    "code": "def is_odd(n):\n    return n % 2 != 0",
+                    "note": "Wrong function name - checks odd not even"
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }

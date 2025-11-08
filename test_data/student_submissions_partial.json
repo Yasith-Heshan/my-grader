@@ -1,69 +1,69 @@
 {
-  "assignment1_submissions": [
-    {
-      "student_email": "charlie.davis@student.edu",
-      "cells": [
+    "assignment1_submissions": [
         {
-          "cell_id": "cell_1",
-          "code": "x = 5",
-          "note": "Wrong value - should be 10"
+            "student_email": "charlie.davis@student.edu",
+            "cells": [
+                {
+                    "cell_id": "cell_1",
+                    "code": "x = 5",
+                    "note": "Wrong value - should be 10"
+                },
+                {
+                    "cell_id": "cell_2",
+                    "code": "result = 6 * 7"
+                },
+                {
+                    "cell_id": "cell_3",
+                    "code": "name = 'Charlie'"
+                },
+                {
+                    "cell_id": "cell_4",
+                    "code": "sum_value = 10 + 10",
+                    "note": "Wrong calculation - should be 15"
+                }
+            ]
         },
         {
-          "cell_id": "cell_2",
-          "code": "result = 6 * 7"
-        },
-        {
-          "cell_id": "cell_3",
-          "code": "name = 'Charlie'"
-        },
-        {
-          "cell_id": "cell_4",
-          "code": "sum_value = 10 + 10",
-          "note": "Wrong calculation - should be 15"
+            "student_email": "diana.kumar@student.edu",
+            "cells": [
+                {
+                    "cell_id": "cell_1",
+                    "code": "x = 10"
+                },
+                {
+                    "cell_id": "cell_2",
+                    "code": "result = 6 + 7",
+                    "note": "Used addition instead of multiplication"
+                },
+                {
+                    "cell_id": "cell_3",
+                    "code": "name = 'Diana Kumar'"
+                },
+                {
+                    "cell_id": "cell_4",
+                    "code": "sum_value = 5 + 10"
+                }
+            ]
         }
-      ]
-    },
-    {
-      "student_email": "diana.kumar@student.edu",
-      "cells": [
+    ],
+    "assignment2_submissions": [
         {
-          "cell_id": "cell_1",
-          "code": "x = 10"
-        },
-        {
-          "cell_id": "cell_2",
-          "code": "result = 6 + 7",
-          "note": "Used addition instead of multiplication"
-        },
-        {
-          "cell_id": "cell_3",
-          "code": "name = 'Diana Kumar'"
-        },
-        {
-          "cell_id": "cell_4",
-          "code": "sum_value = 5 + 10"
+            "student_email": "charlie.davis@student.edu",
+            "cells": [
+                {
+                    "cell_id": "cell_1",
+                    "code": "def greet(name):\n    return 'Hello, ' + name",
+                    "note": "Missing exclamation mark"
+                },
+                {
+                    "cell_id": "cell_2",
+                    "code": "def add(a, b):\n    return a + b"
+                },
+                {
+                    "cell_id": "cell_3",
+                    "code": "def is_even(n):\n    if n % 2 == 0:\n        return True\n    return False"
+                }
+            ]
         }
-      ]
-    }
-  ],
-  "assignment2_submissions": [
-    {
-      "student_email": "charlie.davis@student.edu",
-      "cells": [
-        {
-          "cell_id": "cell_1",
-          "code": "def greet(name):\n    return 'Hello, ' + name",
-          "note": "Missing exclamation mark"
-        },
-        {
-          "cell_id": "cell_2",
-          "code": "def add(a, b):\n    return a + b"
-        },
-        {
-          "cell_id": "cell_3",
-          "code": "def is_even(n):\n    if n % 2 == 0:\n        return True\n    return False"
-        }
-      ]
-    }
-  ]
+    ]
 }

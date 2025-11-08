@@ -1,37 +1,37 @@
 {
-  "assignment": {
-    "title": "Lists and Dictionaries",
-    "description": "Work with Python lists and dictionaries",
-    "due_date": "2025-12-25T23:59:59"
-  },
-  "test_cases": [
-    {
-      "question_number": 1,
-      "cell_id": "cell_1",
-      "test_code": "passed = 'fruits' in locals() and isinstance(fruits, list) and len(fruits) == 3\nfeedback = 'Perfect! You created a list with 3 fruits' if passed else 'Create a list called fruits with 3 fruit names'",
-      "points": 10.0,
-      "description": "Create a list called 'fruits' with three fruit names"
+    "assignment": {
+        "title": "Lists and Dictionaries",
+        "description": "Work with Python lists and dictionaries",
+        "due_date": "2025-12-25T23:59:59"
     },
-    {
-      "question_number": 2,
-      "cell_id": "cell_2",
-      "test_code": "passed = 'numbers' in locals() and isinstance(numbers, list) and sum(numbers) == 15\nfeedback = 'Great! Your list sums to 15' if passed else 'Create a list of numbers that sum to 15'",
-      "points": 15.0,
-      "description": "Create a list 'numbers' containing integers that sum to 15"
-    },
-    {
-      "question_number": 3,
-      "cell_id": "cell_3",
-      "test_code": "passed = 'person' in locals() and isinstance(person, dict) and 'name' in person and 'age' in person\nfeedback = 'Excellent! Your dictionary has name and age' if passed else 'Create a dict with keys name and age'",
-      "points": 15.0,
-      "description": "Create a dictionary 'person' with keys 'name' and 'age'"
-    },
-    {
-      "question_number": 4,
-      "cell_id": "cell_4",
-      "test_code": "passed = 'first_item' in locals() and 'fruits' in locals() and isinstance(fruits, list) and len(fruits) > 0 and first_item == fruits[0]\nfeedback = 'Perfect! You extracted the first item' if passed else 'Store the first item of fruits list in first_item'",
-      "points": 10.0,
-      "description": "Extract the first item from 'fruits' list and store it in 'first_item'"
-    }
-  ]
+    "test_cases": [
+        {
+            "question_number": 1,
+            "cell_id": "cell_1",
+            "test_code": "passed = 'fruits' in locals() and isinstance(fruits, list) and len(fruits) == 3\nfeedback = 'Perfect! You created a list with 3 fruits' if passed else 'Create a list called fruits with 3 fruit names'",
+            "points": 10.0,
+            "description": "Create a list called 'fruits' with three fruit names"
+        },
+        {
+            "question_number": 2,
+            "cell_id": "cell_2",
+            "test_code": "passed = 'numbers' in locals() and isinstance(numbers, list) and sum(numbers) == 15\nfeedback = 'Great! Your list sums to 15' if passed else 'Create a list of numbers that sum to 15'",
+            "points": 15.0,
+            "description": "Create a list 'numbers' containing integers that sum to 15"
+        },
+        {
+            "question_number": 3,
+            "cell_id": "cell_3",
+            "test_code": "passed = 'person' in locals() and isinstance(person, dict) and 'name' in person and 'age' in person\nfeedback = 'Excellent! Your dictionary has name and age' if passed else 'Create a dict with keys name and age'",
+            "points": 15.0,
+            "description": "Create a dictionary 'person' with keys 'name' and 'age'"
+        },
+        {
+            "question_number": 4,
+            "cell_id": "cell_4",
+            "test_code": "passed = 'first_item' in locals() and 'fruits' in locals() and isinstance(fruits, list) and len(fruits) > 0 and first_item == fruits[0]\nfeedback = 'Perfect! You extracted the first item' if passed else 'Store the first item of fruits list in first_item'",
+            "points": 10.0,
+            "description": "Extract the first item from 'fruits' list and store it in 'first_item'"
+        }
+    ]
 }

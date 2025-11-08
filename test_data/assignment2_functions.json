@@ -1,30 +1,30 @@
 {
-  "assignment": {
-    "title": "Python Functions",
-    "description": "Master function definitions, parameters, and return values",
-    "due_date": "2025-12-20T23:59:59"
-  },
-  "test_cases": [
-    {
-      "question_number": 1,
-      "cell_id": "cell_1",
-      "test_code": "try:\n    passed = callable(greet) and greet('World') == 'Hello, World!'\n    feedback = 'Perfect! Your function works correctly' if passed else 'Function should return \"Hello, World!\"'\nexcept:\n    passed = False\n    feedback = 'Define a function greet(name) that returns \"Hello, \" + name + \"!\"'",
-      "points": 15.0,
-      "description": "Create a function greet(name) that returns 'Hello, {name}!'"
+    "assignment": {
+        "title": "Python Functions",
+        "description": "Master function definitions, parameters, and return values",
+        "due_date": "2025-12-20T23:59:59"
     },
-    {
-      "question_number": 2,
-      "cell_id": "cell_2",
-      "test_code": "try:\n    passed = callable(add) and add(5, 3) == 8 and add(10, 20) == 30\n    feedback = 'Excellent! Your add function works!' if passed else 'Function should return the sum of two numbers'\nexcept:\n    passed = False\n    feedback = 'Create a function add(a, b) that returns a + b'",
-      "points": 15.0,
-      "description": "Create a function add(a, b) that returns the sum of a and b"
-    },
-    {
-      "question_number": 3,
-      "cell_id": "cell_3",
-      "test_code": "try:\n    passed = callable(is_even) and is_even(4) == True and is_even(7) == False\n    feedback = 'Great! Your even checker works!' if passed else 'Function should return True if number is even'\nexcept:\n    passed = False\n    feedback = 'Create a function is_even(n) that returns True if n is even, False otherwise'",
-      "points": 20.0,
-      "description": "Create a function is_even(n) that returns True if n is even, False otherwise"
-    }
-  ]
+    "test_cases": [
+        {
+            "question_number": 1,
+            "cell_id": "cell_1",
+            "test_code": "try:\n    passed = callable(greet) and greet('World') == 'Hello, World!'\n    feedback = 'Perfect! Your function works correctly' if passed else 'Function should return \"Hello, World!\"'\nexcept:\n    passed = False\n    feedback = 'Define a function greet(name) that returns \"Hello, \" + name + \"!\"'",
+            "points": 15.0,
+            "description": "Create a function greet(name) that returns 'Hello, {name}!'"
+        },
+        {
+            "question_number": 2,
+            "cell_id": "cell_2",
+            "test_code": "try:\n    passed = callable(add) and add(5, 3) == 8 and add(10, 20) == 30\n    feedback = 'Excellent! Your add function works!' if passed else 'Function should return the sum of two numbers'\nexcept:\n    passed = False\n    feedback = 'Create a function add(a, b) that returns a + b'",
+            "points": 15.0,
+            "description": "Create a function add(a, b) that returns the sum of a and b"
+        },
+        {
+            "question_number": 3,
+            "cell_id": "cell_3",
+            "test_code": "try:\n    passed = callable(is_even) and is_even(4) == True and is_even(7) == False\n    feedback = 'Great! Your even checker works!' if passed else 'Function should return True if number is even'\nexcept:\n    passed = False\n    feedback = 'Create a function is_even(n) that returns True if n is even, False otherwise'",
+            "points": 20.0,
+            "description": "Create a function is_even(n) that returns True if n is even, False otherwise"
+        }
+    ]
 }
