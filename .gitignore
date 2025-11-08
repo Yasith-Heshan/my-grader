@@ -16,22 +16,23 @@ parts/
 sdist/
 var/
 wheels/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-MANIFEST
 
 # Virtual Environment
-.venv/
 venv/
-ENV/
 env/
-.env
+ENV/
 
-# Jupyter Notebook
-.ipynb_checkpoints
-# *.ipynb  # Allow notebook files in the repository
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# MongoDB
+data/
+mongodb/
 
 # IDE
 .vscode/
@@ -40,51 +41,17 @@ env/
 *.swo
 *~
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
+# Environment variables
+.env
+.env.local
 
-# Grader specific
-grader_data/
-submissions/
-grades/
-*.pkl
-*.csv
+# Logs
+*.log
 logs/
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.nox/
+# OS
+.DS_Store
+Thumbs.db
 
-# Documentation
-docs/_build/
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+# Temporary files
+README_MONGODB.md

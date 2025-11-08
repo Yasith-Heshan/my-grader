@@ -1,120 +1,103 @@
-# Local Math Grader System 🎓
+# Python Notebook Grading System (MongoDB Version)
 
-A comprehensive automated grading system for mathematics assignments, designed for educational environments where students need instant feedback on their programming solutions to math problems.
-
-## ✨ Features
-
-- **Automated Grading**: Instant feedback on student submissions
-- **Flexible Test Cases**: Easy-to-define custom test functions
-- **Grade Analytics**: Comprehensive statistics and visualizations
-- **Jupyter Integration**: Teacher and student interfaces via notebooks
-- **Persistent Storage**: JSON-based data storage with pickle test serialization
-- **Sample Assignments**: Ready-to-use examples for quick setup
+A FastAPI-based backend system for managing and grading Python notebook assignments with MongoDB.
 
 ## 🚀 Quick Start
 
-1. **Setup & Verification**:
-   ```bash
-   python setup.py
-   ```
-   This will verify your installation and create sample homework.
+### Prerequisites
+1. **Python 3.11+**
+2. **MongoDB** running locally on `mongodb://localhost:27017`
 
-2. **For Teachers**:
-   - Open `Teacher_Guide.ipynb` in Jupyter
-   - Follow the step-by-step guide to create assignments
-   - View grades and analytics
+### Installation
+```powershell
+# Install dependencies
+pip install -r requirements.txt
 
-3. **For Students**:
-   - Open `test.ipynb` in Jupyter  
-   - Complete the math problems
-   - Submit for instant grading
+# Start MongoDB (if not running)
+mongod --dbpath="C:\data\db"
 
-## 📦 Requirements
-
-- Python 3.8+
-- pandas
-- numpy
-- matplotlib
-- seaborn
-
-Install dependencies:
-```bash
-pip install pandas numpy matplotlib seaborn
+# Run the application
+python main.py
 ```
 
-## 📁 Project Structure
+Visit: `http://localhost:8000/docs` for API documentation
 
-```
-├── local_grader.py          # Core grading engine
-├── Teacher_Guide.ipynb      # Teacher interface & documentation
-├── test.ipynb              # Student homework template
-├── setup.py                # Installation verification script
-├── assignement.py          # Assignment data models
-├── student.py              # Student data models
-├── submission.py           # Submission handling
-├── teacher.py              # Teacher utilities
-├── test_case.py            # Test case definitions
-├── grader_data/            # Generated homework & grade data
-└── ToBeRemoved/            # Additional examples
-```
+## 📊 Key Changes from SQLite Version
 
-## 🎯 How It Works
+✅ **MongoDB + Beanie ODM** instead of SQLAlchemy  
+✅ **Async operations** throughout  
+✅ **String IDs** (ObjectIds) instead of integers  
+✅ **No migrations needed** (schemaless)  
+✅ **Better scalability** for production use  
 
-1. **Teachers** create assignments with custom test functions
-2. **Students** submit their solutions as Python functions
-3. **System** automatically runs test cases and provides scores
-4. **Analytics** show class performance and individual progress
+## 🔧 Configuration
 
-## 📊 Sample Usage
-
+Edit `database.py`:
 ```python
-from local_grader import LocalGrader
+# Local MongoDB
+MONGODB_URL = "mongodb://localhost:27017"
+DATABASE_NAME = "grading_system"
 
-# Create homework
-grader = LocalGrader("Math Assignment 1")
-
-# Add test case
-def test_addition(submission_data):
-    func = submission_data['add_numbers']
-    return {"score": 1.0 if func(2, 3) == 5 else 0.0, 
-            "feedback": "Addition test"}
-
-grader.add_test_case("addition", test_addition, 10, "Basic addition")
-
-# Student submission
-student_solution = {'add_numbers': lambda a, b: a + b}
-result = grader.submit("student_123", student_solution)
-print(f"Score: {result['total_score']}/{result['max_score']}")
+# Or MongoDB Atlas
+MONGODB_URL = "mongodb+srv://user:pass@cluster.mongodb.net/"
 ```
 
-## 🔧 Advanced Features
+## 📚 API Endpoints
 
-- Custom test case serialization with pickle
-- Comprehensive error handling and feedback
-- Grade export capabilities
-- Visual analytics with matplotlib/seaborn
-- Extensible architecture for new problem types
+### Teacher Routes (`/api/teacher/`)
+- `POST /register` - Register teacher
+- `POST /assignments` - Create assignment
+- `POST /assignments/{id}/questions` - Add test cases
+- `POST /assignments/{id}/grade` - Grade all submissions
+- `GET /assignments/{id}/summary` - View results
 
-## 📈 Analytics
+### Student Routes (`/api/student/`)
+- `POST /register` - Register student
+- `GET /assignments` - Browse assignments
+- `POST /submissions` - Create submission
+- `POST /submissions/{id}/items` - Submit code
+- `GET /submissions/{id}/results` - View grades
 
-The system provides:
-- Individual student performance tracking
-- Class-wide statistics
-- Problem difficulty analysis
-- Visual grade distributions
-- Detailed feedback reports
+## 💡 Example Usage
 
-## 🤝 Contributing
+```powershell
+# 1. Register Teacher
+curl -X POST http://localhost:8000/api/teacher/register `
+  -H "Content-Type: application/json" `
+  -d '{\"name\": \"Dr. Smith\", \"email\": \"smith@edu\"}'
 
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Submit a pull request
+# Response: { "_id": "507f...", "name": "Dr. Smith", ... }
 
-## 📄 License
+# 2. Create Assignment (use teacher _id from above)
+curl -X POST http://localhost:8000/api/teacher/assignments `
+  -H "Content-Type: application/json" `
+  -d '{\"title\": \"Python 101\", \"teacher_id\": \"507f...\"}'
+```
 
-This project is open source. Feel free to use and modify for educational purposes.
+## 🗄️ MongoDB Collections
 
----
+- `teachers` - Teacher accounts
+- `students` - Student accounts  
+- `assignments` - Assignments with metadata
+- `test_cases` - Test logic per question
+- `submissions` - Student submissions
+- `submission_items` - Individual code submissions
 
-**Note**: This system is designed for educational environments. Ensure proper academic integrity policies are in place when using automated grading systems.
+## 🔐 Security Notes
+
+⚠️ **This is a development version**
+
+For production:
+- Add JWT authentication
+- Sandbox code execution (Docker)
+- Enable MongoDB authentication
+- Add rate limiting
+- Input validation & sanitization
+
+## 📖 Full Documentation
+
+See inline code comments and API docs at `/docs`
+
+## License
+
+MIT
