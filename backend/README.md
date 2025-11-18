@@ -98,6 +98,71 @@ For production:
 
 See inline code comments and API docs at `/docs`
 
+---
+
+## 🎓 Enhanced LocalGrader Features
+
+This system now supports **dynamic test functions** similar to the original LocalGrader!
+
+### ✨ New Features
+
+- ✅ **Dynamic Test Functions** - Write Python functions to test student code
+- ✅ **Partial Credit** - Award 0.0 to 1.0 points based on correctness
+- ✅ **Detailed Feedback** - Generate custom feedback messages
+- ✅ **Helper Functions** - Quick test creation for common patterns
+- ✅ **Timeout Protection** - Prevent infinite loops (default: 30s)
+- ✅ **Multiple Test Formats** - Functions, DataFrames, algorithms, math
+
+### 📚 Quick Links
+
+- **[TEACHER_QUICKSTART.md](TEACHER_QUICKSTART.md)** - ⭐ START HERE - 5-minute guide
+- **[MONGODB_GRADER_GUIDE.md](MONGODB_GRADER_GUIDE.md)** - Complete usage guide
+- **[LOCALGRADER_MIGRATION.md](LOCALGRADER_MIGRATION.md)** - Migration details
+- **[example_usage.py](example_usage.py)** - Working code example
+
+### 🚀 Quick Example
+
+```python
+from services.test_utils import create_function_test
+from services.assignment_service import add_test_case_with_function
+
+# Create a test
+test = create_function_test(
+    'square',
+    [
+        {"input": 5, "expected": 25},
+        {"input": 3, "expected": 9}
+    ],
+    partial_credit=True
+)
+
+# Add to assignment
+await add_test_case_with_function(
+    assignment_id=assignment_id,
+    test_name="test_square",
+    test_function=test,
+    points=10.0
+)
+```
+
+### 🎯 Test Result Formats
+
+```python
+# Simple pass/fail
+return True
+
+# Partial credit
+return 0.75  # 75% credit
+
+# Detailed feedback
+return {
+    "score": 0.8,
+    "feedback": "✅ 4/5 tests passed\n❌ Failed edge case"
+}
+```
+
+Run the example: `python example_usage.py`
+
 ## License
 
 MIT

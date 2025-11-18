@@ -1,15 +1,39 @@
 """
 Grader service - Business logic for grading operations
+Enhanced with LocalGrader functionality for dynamic test execution
 """
 from typing import List, Dict, Any, Optional
 from datetime import datetime
 from beanie import PydanticObjectId
 import sys
-from io import StringIO
+import pickle
+import base64
+import time
 import traceback
+from io import StringIO
 
 from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment
 from schemas import GradingResult, SubmissionItemResponse, StudentResult, AssignmentSummary
+
+
+def _run_test_with_timeout(test_function, submission_data: Dict, timeout: float):
+    """
+    Run a test function with timeout protection
+    
+    Args:
+        test_function: The test to run
+        submission_data: Student's submission data
+        timeout: Maximum execution time
+        
+    Returns:
+        Test result
+    """
+    start_time = time.time()
+    result = test_function(submission_data)
+    if time.time() - start_time > timeout:
+        raise TimeoutError("Test execution timed out")
+    return result
+
 
 def grade_single_cell(
     test_case: TestCase,
@@ -17,11 +41,13 @@ def grade_single_cell(
 ) -> Dict[str, Any]:
     """
     Grade a single cell submission against a test case.
-    This is a placeholder implementation that executes the student code
-    and the test code to verify correctness.
+    Supports both code-based tests and function-based tests with advanced features like:
+    - Partial credit
+    - Detailed feedback
+    - Timeout handling
     """
     try:
-        # Create a namespace for code execution
+        # Prepare submission data
         namespace = {}
         
         # Capture stdout
@@ -29,31 +55,136 @@ def grade_single_cell(
         sys.stdout = StringIO()
         
         # Execute student's submitted code
-        exec(submission_item.submitted_code, namespace)
+        try:
+            exec(submission_item.submitted_code, namespace)
+        except Exception as e:
+            sys.stdout = old_stdout
+            return {
+                'passed': False,
+                'score': 0.0,
+                'max_score': test_case.points,
+                'output': '',
+                'feedback': f'Error executing student code: {str(e)}\n{traceback.format_exc()}'
+            }
         
-        # Execute test code in the same namespace
-        exec(test_case.test_code, namespace)
-        
-        # Get the output
-        output = sys.stdout.getvalue()
+        # Get the output from student code
+        student_output = sys.stdout.getvalue()
         sys.stdout = old_stdout
         
-        # Check if test passed (test_code should set 'passed' variable)
-        passed = namespace.get('passed', False)
+        # Now run the test
+        start_time = time.time()
         
-        # Calculate score
-        score = test_case.points if passed else 0.0
+        # Check if test uses serialized function (advanced LocalGrader style)
+        if test_case.serialized_function:
+            try:
+                # Deserialize test function
+                serialized_data = base64.b64decode(test_case.serialized_function.encode('utf-8'))
+                test_function = pickle.loads(serialized_data)
+                
+                # Run test with timeout
+                test_result = _run_test_with_timeout(
+                    test_function, namespace, test_case.timeout
+                )
+                
+                execution_time = time.time() - start_time
+                
+                # Process different result formats
+                if test_result is True:
+                    # Full credit
+                    score = test_case.points
+                    passed = True
+                    feedback = "Test passed successfully"
+                    
+                elif isinstance(test_result, (int, float)) and 0 <= test_result <= 1:
+                    # Partial credit (test returned a score between 0 and 1)
+                    score = test_case.points * test_result
+                    passed = test_result == 1.0
+                    feedback = f"Partial credit: {test_result*100:.1f}%"
+                    
+                elif isinstance(test_result, dict) and "score" in test_result:
+                    # Detailed result with score and feedback
+                    score = test_case.points * test_result.get("score", 0)
+                    passed = test_result.get("score", 0) >= 1.0
+                    feedback = str(test_result.get("feedback", "No feedback provided"))
+                    
+                else:
+                    # Test failed
+                    score = 0.0
+                    passed = False
+                    feedback = str(test_result) if test_result is not None else "Test failed"
+                
+                return {
+                    'passed': passed,
+                    'score': score,
+                    'max_score': test_case.points,
+                    'output': student_output,
+                    'feedback': feedback,
+                    'execution_time': execution_time
+                }
+                
+            except TimeoutError:
+                return {
+                    'passed': False,
+                    'score': 0.0,
+                    'max_score': test_case.points,
+                    'output': student_output,
+                    'feedback': f"Test timed out after {test_case.timeout} seconds",
+                    'execution_time': test_case.timeout
+                }
+                
+            except Exception as e:
+                return {
+                    'passed': False,
+                    'score': 0.0,
+                    'max_score': test_case.points,
+                    'output': student_output,
+                    'feedback': f'Error executing test function: {str(e)}\n{traceback.format_exc()}',
+                    'execution_time': time.time() - start_time
+                }
         
-        # Generate feedback
-        feedback = namespace.get('feedback', 'Test executed successfully' if passed else 'Test failed')
+        # Legacy code-based test (simple pass/fail)
+        elif test_case.test_code:
+            try:
+                # Execute test code in the same namespace
+                exec(test_case.test_code, namespace)
+                
+                # Check if test passed (test_code should set 'passed' variable)
+                passed = namespace.get('passed', False)
+                
+                # Calculate score
+                score = test_case.points if passed else 0.0
+                
+                # Generate feedback
+                feedback = namespace.get('feedback', 'Test executed successfully' if passed else 'Test failed')
+                
+                return {
+                    'passed': passed,
+                    'score': score,
+                    'max_score': test_case.points,
+                    'output': student_output,
+                    'feedback': feedback,
+                    'execution_time': time.time() - start_time
+                }
+                
+            except Exception as e:
+                return {
+                    'passed': False,
+                    'score': 0.0,
+                    'max_score': test_case.points,
+                    'output': student_output,
+                    'feedback': f'Error executing test code: {str(e)}\n{traceback.format_exc()}',
+                    'execution_time': time.time() - start_time
+                }
         
-        return {
-            'passed': passed,
-            'score': score,
-            'max_score': test_case.points,
-            'output': output,
-            'feedback': feedback
-        }
+        else:
+            return {
+                'passed': False,
+                'score': 0.0,
+                'max_score': test_case.points,
+                'output': student_output,
+                'feedback': 'No test code or test function found for this test case',
+                'execution_time': 0.0
+            }
         
     except Exception as e:
         # Restore stdout
@@ -64,7 +195,8 @@ def grade_single_cell(
             'score': 0.0,
             'max_score': test_case.points,
             'output': '',
-            'feedback': f'Error executing code: {str(e)}\n{traceback.format_exc()}'
+            'feedback': f'Unexpected error: {str(e)}\n{traceback.format_exc()}',
+            'execution_time': 0.0
         }
 
 async def grade_submission(submission_id: str) -> GradingResult:

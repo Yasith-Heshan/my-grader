@@ -1,7 +1,10 @@
 """
 Assignment service - Business logic for assignment operations
+Enhanced with support for dynamic test functions (LocalGrader style)
 """
-from typing import List, Optional
+from typing import List, Optional, Callable
+import pickle
+import base64
 from beanie import PydanticObjectId
 from models import Assignment, TestCase
 from schemas import AssignmentCreate, TestCaseCreate
@@ -55,6 +58,64 @@ async def add_test_cases(
         db_test_cases.append(db_test_case)
     
     return db_test_cases
+
+async def add_test_case_with_function(
+    assignment_id: str,
+    test_name: str,
+    test_function: Callable,
+    points: float,
+    description: str = "",
+    timeout: float = 30.0,
+    question_number: Optional[int] = None
+) -> TestCase:
+    """
+    Add a test case with a dynamic test function (LocalGrader style)
+    
+    Args:
+        assignment_id: ID of the assignment
+        test_name: Unique name for the test
+        test_function: Python function that tests student code
+        points: Points awarded for passing this test
+        description: Human-readable description
+        timeout: Maximum time allowed for test execution
+        question_number: Optional question number
+        
+    Returns:
+        Created TestCase document
+        
+    Example:
+        # Create a test function
+        def test_circle_area(submission):
+            if 'circle_area' not in submission:
+                return {"score": 0, "feedback": "Function not found"}
+            # ... test logic ...
+            return {"score": 1.0, "feedback": "Perfect!"}
+        
+        # Add it to assignment
+        test_case = await add_test_case_with_function(
+            assignment_id="...",
+            test_name="circle_area_test",
+            test_function=test_circle_area,
+            points=10.0,
+            description="Test circle area calculation"
+        )
+    """
+    # Serialize test function
+    serialized_function = base64.b64encode(pickle.dumps(test_function)).decode('utf-8')
+    
+    # Create test case
+    db_test_case = TestCase(
+        assignment_id=assignment_id,
+        test_name=test_name,
+        question_number=question_number,
+        serialized_function=serialized_function,
+        points=points,
+        description=description,
+        timeout=timeout
+    )
+    await db_test_case.insert()
+    
+    return db_test_case
 
 async def get_test_cases(assignment_id: str) -> List[TestCase]:
     """Get all test cases for an assignment"""
