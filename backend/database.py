@@ -14,7 +14,7 @@ async def connect_to_mongo():
     global mongodb_client
     
     # Import all models for Beanie initialization
-    from models import Assignment, TestCase, Submission, SubmissionItem, Teacher, Student
+    from models import Assignment, TestCase, SingleCellTestCase, Submission, SubmissionItem, Teacher, Student
     
     mongodb_client = AsyncIOMotorClient(settings.mongodb_url)
     database = mongodb_client[settings.database_name]
@@ -24,6 +24,7 @@ async def connect_to_mongo():
         document_models=[
             Assignment,
             TestCase,
+            SingleCellTestCase,
             Submission,
             SubmissionItem,
             Teacher,
