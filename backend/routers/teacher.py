@@ -10,6 +10,7 @@ from schemas import (
     QuestionCreate, TestCaseResponse, GradingResult,
     TeacherCreate, TeacherResponse
 )
+from schemas.test_case import SingleCellTestCaseCreate, SingleCellTestCaseResponse
 from services import assignment_service, grader_service, teacher_service
 
 router = APIRouter()
@@ -19,6 +20,7 @@ def serialize_document(doc: Document) -> dict:
     data = doc.model_dump()
     if doc.id:
         data["_id"] = str(doc.id)
+        data["id"] = str(doc.id)  # Add id alias for frontend compatibility
     return data
 
 def serialize_documents(docs: List[Document]) -> List[dict]:
@@ -53,6 +55,15 @@ async def get_teacher(teacher_id: str):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get teacher: {str(e)}")
 
 # Assignment Management
+@router.get("/assignments", response_model=List[AssignmentResponse])
+async def get_all_assignments():
+    """Get all assignments"""
+    try:
+        assignments = await assignment_service.get_all_assignments()
+        return serialize_documents(assignments)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get assignments: {str(e)}")
+
 @router.post("/assignments", response_model=AssignmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_assignment(assignment: AssignmentCreate):
     """Create a new assignment"""
@@ -79,6 +90,16 @@ async def get_assignment(assignment_id: str):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get assignment: {str(e)}")
 
+@router.get("/assignments/{assignment_id}/submissions")
+async def get_assignment_submissions(assignment_id: str):
+    """Get all submissions for an assignment"""
+    try:
+        from services import submission_service
+        submissions = await submission_service.get_submissions_by_assignment(assignment_id)
+        return serialize_documents(submissions)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get submissions: {str(e)}")
+
 @router.get("/assignments", response_model=List[AssignmentResponse])
 async def list_assignments(
     teacher_id: Optional[str] = None,
@@ -90,6 +111,16 @@ async def list_assignments(
         return await assignment_service.list_assignments(teacher_id, skip, limit)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to list assignments: {str(e)}")
+
+@router.delete("/assignments/{assignment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_assignment(assignment_id: str):
+    """Delete an assignment"""
+    try:
+        await assignment_service.delete_assignment(assignment_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete assignment: {str(e)}")
 
 # Question/TestCase Management
 @router.post("/assignments/{assignment_id}/questions", 
@@ -127,6 +158,21 @@ async def get_questions(assignment_id: str):
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get questions: {str(e)}")
 
 # Grading
+@router.post("/submissions/{submission_id}/grade", response_model=dict)
+async def grade_submission(submission_id: str):
+    """Grade a single submission"""
+    try:
+        result = await grader_service.grade_submission(submission_id)
+        return {
+            "submission_id": submission_id,
+            "status": "success",
+            "message": "Submission graded successfully"
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to grade submission: {str(e)}")
+
 @router.post("/assignments/{assignment_id}/grade", response_model=dict)
 async def grade_assignment(assignment_id: str):
     """Trigger grading for all submissions of an assignment"""
@@ -178,3 +224,63 @@ async def get_student_results(
         )
     
     return await grader_service.get_grading_result(str(submission.id))
+
+# Single-Cell TestCase Management
+@router.post("/testcases", response_model=SingleCellTestCaseResponse, status_code=status.HTTP_201_CREATED)
+async def create_testcase(testcase: SingleCellTestCaseCreate):
+    """Create a new single-cell testcase function for evaluating student submissions"""
+    try:
+        result = await teacher_service.create_single_cell_testcase(testcase)
+        return serialize_document(result)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create testcase: {str(e)}")
+
+@router.get("/testcases/{testcase_id}", response_model=SingleCellTestCaseResponse)
+async def get_testcase(testcase_id: str):
+    """Get a single-cell testcase by ID"""
+    try:
+        testcase = await teacher_service.get_single_cell_testcase(testcase_id)
+        if not testcase:
+            raise HTTPException(status_code=404, detail="Testcase not found")
+        return serialize_document(testcase)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get testcase: {str(e)}")
+
+@router.get("/assignments/{assignment_id}/testcases", response_model=List[SingleCellTestCaseResponse])
+async def get_assignment_testcases(assignment_id: str):
+    """Get all single-cell testcases for an assignment"""
+    try:
+        testcases = await teacher_service.get_testcases_for_assignment(assignment_id)
+        return serialize_documents(testcases)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get testcases: {str(e)}")
+
+@router.get("/testcases/cell/{assignment_id}/{cell_id}", response_model=List[SingleCellTestCaseResponse])
+async def get_cell_testcases(assignment_id: str, cell_id: str):
+    """Get all single-cell testcases for a specific cell in an assignment"""
+    try:
+        testcases = await teacher_service.get_testcases_for_cell(assignment_id, cell_id)
+        return serialize_documents(testcases)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get cell testcases: {str(e)}")
+
+@router.delete("/testcases/{testcase_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_testcase(testcase_id: str):
+    """Delete a single-cell testcase"""
+    try:
+        deleted = await teacher_service.delete_single_cell_testcase(testcase_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="Testcase not found")
+        return None
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete testcase: {str(e)}")

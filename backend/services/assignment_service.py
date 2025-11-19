@@ -21,6 +21,10 @@ async def get_assignment(assignment_id: str) -> Optional[Assignment]:
     """Get assignment by ID"""
     return await Assignment.get(PydanticObjectId(assignment_id))
 
+async def get_all_assignments() -> List[Assignment]:
+    """Get all assignments"""
+    return await Assignment.find_all().to_list()
+
 async def list_assignments(
     teacher_id: Optional[str] = None,
     skip: int = 0,
@@ -33,6 +37,18 @@ async def list_assignments(
         query = Assignment.find(Assignment.teacher_id == teacher_id)
     
     return await query.skip(skip).limit(limit).to_list()
+
+async def delete_assignment(assignment_id: str) -> None:
+    """Delete an assignment and its related data"""
+    assignment = await Assignment.get(PydanticObjectId(assignment_id))
+    if not assignment:
+        raise ValueError(f"Assignment with id {assignment_id} not found")
+    
+    # Delete related test cases
+    await TestCase.find(TestCase.assignment_id == assignment_id).delete()
+    
+    # Delete the assignment
+    await assignment.delete()
 
 async def add_test_cases(
     assignment_id: str,

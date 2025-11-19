@@ -11,6 +11,7 @@ async def create_submission(submission: SubmissionCreate) -> Submission:
     db_submission = Submission(
         assignment_id=submission.assignment_id,
         student_id=submission.student_id,
+        code=submission.code,
         status=GradeStatus.PENDING
     )
     await db_submission.insert()
@@ -19,6 +20,14 @@ async def create_submission(submission: SubmissionCreate) -> Submission:
 async def get_submission(submission_id: str) -> Optional[Submission]:
     """Get submission by ID"""
     return await Submission.get(PydanticObjectId(submission_id))
+
+async def get_all_submissions() -> List[Submission]:
+    """Get all submissions"""
+    return await Submission.find_all().to_list()
+
+async def get_submissions_by_assignment(assignment_id: str) -> List[Submission]:
+    """Get all submissions for an assignment"""
+    return await Submission.find(Submission.assignment_id == assignment_id).to_list()
 
 async def get_student_submissions(
     student_id: str,

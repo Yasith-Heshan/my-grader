@@ -62,3 +62,30 @@ class SingleCellTestCaseResponse(BaseModel):
     class Config:
         from_attributes = True
         populate_by_name = True
+
+class CellEvaluationRequest(BaseModel):
+    """Request schema for evaluating a single cell"""
+    assignment_id: str = Field(..., min_length=1, description="Assignment ID")
+    cell_id: str = Field(..., min_length=1, description="Cell identifier")
+    student_code: str = Field(..., min_length=1, description="Student's code to evaluate")
+    timeout: Optional[int] = Field(default=None, ge=1, le=60, description="Optional timeout override")
+
+class TestCaseResult(BaseModel):
+    """Result of a single testcase execution"""
+    testcase_name: str
+    passed: bool
+    score: float
+    max_score: float
+    feedback: str
+
+class CellEvaluationResponse(BaseModel):
+    """Response schema for cell evaluation"""
+    success: bool
+    score: float
+    max_score: float
+    percentage: float = 0.0
+    passed_tests: int = 0
+    total_tests: int = 0
+    feedback: str
+    student_output: str = ""
+    results: list[TestCaseResult]

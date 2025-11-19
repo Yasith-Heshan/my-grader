@@ -7,7 +7,8 @@ from datetime import datetime
 
 class SubmissionCreate(BaseModel):
     assignment_id: str
-    student_id: str
+    student_id: Optional[str] = None  # Optional - will use mock student if not provided
+    code: Optional[str] = None  # Student's submitted code
 
 class SubmissionItemCreate(BaseModel):
     test_case_id: str
@@ -35,11 +36,13 @@ class SubmissionResponse(BaseModel):
     id: str = Field(..., alias="_id")
     assignment_id: str
     student_id: str
+    code: Optional[str] = None
     status: str
-    total_score: float
-    max_score: float
+    graded: bool = False
+    total_score: float = 0.0
+    max_score: float = 0.0
     submitted_at: datetime
-    graded_at: Optional[datetime]
+    graded_at: Optional[datetime] = None
     items: List[SubmissionItemResponse] = []
     
     class Config:

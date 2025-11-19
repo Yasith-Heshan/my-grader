@@ -16,11 +16,17 @@ class GradeStatus(str, Enum):
 class Submission(Document):
     assignment_id: Indexed(str)  # Reference to Assignment document ID
     student_id: Indexed(str)  # Reference to Student document ID
+    code: Optional[str] = None  # Student's submitted code
     status: GradeStatus = GradeStatus.PENDING
     total_score: float = 0.0
     max_score: float = 0.0
     submitted_at: datetime = Field(default_factory=datetime.utcnow)
     graded_at: Optional[datetime] = None
+    
+    @property
+    def graded(self) -> bool:
+        """Check if submission is graded"""
+        return self.status == GradeStatus.COMPLETED
     
     class Settings:
         name = "submissions"

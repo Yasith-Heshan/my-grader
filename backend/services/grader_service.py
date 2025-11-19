@@ -7,8 +7,10 @@ from beanie import PydanticObjectId
 import sys
 from io import StringIO
 import traceback
+import signal
+from contextlib import contextmanager
 
-from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment
+from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment, SingleCellTestCase
 from schemas import GradingResult, SubmissionItemResponse, StudentResult, AssignmentSummary
 
 def grade_single_cell(
@@ -68,7 +70,7 @@ def grade_single_cell(
         }
 
 async def grade_submission(submission_id: str) -> GradingResult:
-    """Grade a full submission by grading all its items"""
+    """Grade a full submission by evaluating code against test cases"""
     submission = await Submission.get(PydanticObjectId(submission_id))
     
     if not submission:
@@ -78,6 +80,53 @@ async def grade_submission(submission_id: str) -> GradingResult:
     submission.status = GradeStatus.GRADING
     await submission.save()
     
+    # Check if submission has code (single-cell submission)
+    if submission.code:
+        # Get all test cases for this assignment
+        testcases = await SingleCellTestCase.find(
+            SingleCellTestCase.assignment_id == submission.assignment_id
+        ).to_list()
+        
+        if not testcases:
+            submission.status = GradeStatus.COMPLETED
+            submission.total_score = 0.0
+            submission.max_score = 0.0
+            submission.graded_at = datetime.utcnow()
+            await submission.save()
+            raise ValueError(f"No test cases found for assignment {submission.assignment_id}")
+        
+        # Evaluate against each test case
+        total_score = 0.0
+        max_score = 0.0
+        
+        for testcase in testcases:
+            result = await evaluate_single_cell(
+                assignment_id=submission.assignment_id,
+                cell_id=testcase.cell_id,
+                student_code=submission.code,
+                timeout=testcase.timeout
+            )
+            
+            total_score += result.get('score', 0.0)
+            max_score += result.get('max_score', 0.0)
+        
+        # Update submission with scores
+        submission.total_score = total_score
+        submission.max_score = max_score
+        submission.status = GradeStatus.COMPLETED
+        submission.graded_at = datetime.utcnow()
+        await submission.save()
+        
+        return GradingResult(
+            submission_id=str(submission.id),
+            total_score=total_score,
+            max_score=max_score,
+            passed_count=1 if total_score >= max_score * 0.7 else 0,
+            failed_count=0 if total_score >= max_score * 0.7 else 1,
+            items=[]
+        )
+    
+    # Original code for multi-cell submissions with SubmissionItems
     # Get all submission items
     items = await SubmissionItem.find(
         SubmissionItem.submission_id == str(submission.id)
@@ -259,3 +308,213 @@ async def get_assignment_summary(assignment_id: str) -> AssignmentSummary:
         average_score=average_score,
         students=student_results
     )
+
+# Single-Cell Evaluation Functions
+
+class TimeoutException(Exception):
+    """Exception raised when code execution times out"""
+    pass
+
+@contextmanager
+def time_limit(seconds: int):
+    """Context manager to limit execution time (Unix/Linux only)"""
+    def signal_handler(signum, frame):
+        raise TimeoutException("Code execution timed out")
+    
+    # Note: signal.alarm only works on Unix/Linux
+    # For Windows, we'll use a different approach
+    if hasattr(signal, 'SIGALRM'):
+        signal.signal(signal.SIGALRM, signal_handler)
+        signal.alarm(seconds)
+        try:
+            yield
+        finally:
+            signal.alarm(0)
+    else:
+        # Windows fallback - no timeout enforcement
+        yield
+
+async def evaluate_single_cell(
+    assignment_id: str,
+    cell_id: str,
+    student_code: str,
+    timeout: Optional[int] = None
+) -> Dict[str, Any]:
+    """
+    Evaluate a single cell of student code against testcase functions
+    
+    Args:
+        assignment_id: Assignment ID
+        cell_id: Cell identifier
+        student_code: Student's submitted code for the cell
+        timeout: Optional timeout override (uses testcase timeout by default)
+        
+    Returns:
+        Dict with evaluation results including score and feedback
+    """
+    # Get testcases for this cell
+    testcases = await SingleCellTestCase.find(
+        SingleCellTestCase.assignment_id == assignment_id,
+        SingleCellTestCase.cell_id == cell_id
+    ).to_list()
+    
+    if not testcases:
+        return {
+            "success": False,
+            "score": 0.0,
+            "max_score": 0.0,
+            "feedback": f"No testcases found for cell '{cell_id}'",
+            "results": []
+        }
+    
+    # Execute student code and collect namespace
+    student_namespace = {}
+    student_output = ""
+    student_error = None
+    
+    try:
+        # Capture stdout during student code execution
+        old_stdout = sys.stdout
+        sys.stdout = StringIO()
+        
+        # Execute student code
+        exec(student_code, student_namespace)
+        
+        # Get captured output
+        student_output = sys.stdout.getvalue()
+        sys.stdout = old_stdout
+        
+    except Exception as e:
+        sys.stdout = old_stdout
+        student_error = f"Error in student code: {str(e)}\n{traceback.format_exc()}"
+        
+        return {
+            "success": False,
+            "score": 0.0,
+            "max_score": sum(tc.points for tc in testcases),
+            "feedback": student_error,
+            "student_output": student_output,
+            "results": []
+        }
+    
+    # Run each testcase
+    total_score = 0.0
+    max_score = 0.0
+    testcase_results = []
+    
+    for testcase in testcases:
+        max_score += testcase.points
+        
+        try:
+            # Create namespace for testcase execution
+            testcase_namespace = {
+                'submission': student_namespace,
+                'math': __import__('math'),
+                'json': __import__('json'),
+                'datetime': __import__('datetime'),
+            }
+            
+            # Use testcase timeout or provided timeout
+            exec_timeout = timeout if timeout is not None else testcase.timeout
+            
+            # Execute testcase function
+            exec(testcase.testcase_function, testcase_namespace)
+            
+            # Find the test function (should match testcase_name)
+            test_func = testcase_namespace.get(testcase.testcase_name)
+            
+            if not test_func:
+                # Try to find any function that's not a builtin
+                for name, obj in testcase_namespace.items():
+                    if callable(obj) and not name.startswith('_') and name not in ['math', 'json', 'datetime', 'submission']:
+                        test_func = obj
+                        break
+            
+            if not test_func or not callable(test_func):
+                testcase_results.append({
+                    "testcase_name": testcase.testcase_name,
+                    "passed": False,
+                    "score": 0.0,
+                    "max_score": testcase.points,
+                    "feedback": f"Testcase function '{testcase.testcase_name}' not found"
+                })
+                continue
+            
+            # Execute the test function with timeout
+            try:
+                with time_limit(exec_timeout):
+                    result = test_func(student_namespace)
+            except TimeoutException:
+                testcase_results.append({
+                    "testcase_name": testcase.testcase_name,
+                    "passed": False,
+                    "score": 0.0,
+                    "max_score": testcase.points,
+                    "feedback": f"Test execution timed out (>{exec_timeout}s)"
+                })
+                continue
+            
+            # Parse result
+            if isinstance(result, dict):
+                test_score = result.get('score', 0.0)
+                if isinstance(test_score, (int, float)):
+                    # Normalize score to points
+                    if 0 <= test_score <= 1:
+                        # Score is a fraction
+                        actual_score = test_score * testcase.points
+                    else:
+                        # Score is absolute
+                        actual_score = min(test_score, testcase.points)
+                else:
+                    actual_score = 0.0
+                
+                feedback = result.get('feedback', 'Test executed')
+                passed = actual_score >= testcase.points * 0.5  # Pass if >= 50%
+                
+                testcase_results.append({
+                    "testcase_name": testcase.testcase_name,
+                    "passed": passed,
+                    "score": actual_score,
+                    "max_score": testcase.points,
+                    "feedback": feedback
+                })
+                
+                total_score += actual_score
+            else:
+                testcase_results.append({
+                    "testcase_name": testcase.testcase_name,
+                    "passed": False,
+                    "score": 0.0,
+                    "max_score": testcase.points,
+                    "feedback": f"Invalid test result format. Expected dict with 'score' and 'feedback'"
+                })
+        
+        except Exception as e:
+            testcase_results.append({
+                "testcase_name": testcase.testcase_name,
+                "passed": False,
+                "score": 0.0,
+                "max_score": testcase.points,
+                "feedback": f"Error executing testcase: {str(e)}"
+            })
+    
+    # Calculate overall percentage
+    percentage = (total_score / max_score * 100) if max_score > 0 else 0
+    
+    # Generate overall feedback
+    passed_count = sum(1 for r in testcase_results if r['passed'])
+    total_tests = len(testcase_results)
+    
+    overall_feedback = f"Passed {passed_count}/{total_tests} tests. Score: {total_score:.2f}/{max_score:.2f} ({percentage:.1f}%)"
+    
+    return {
+        "success": True,
+        "score": total_score,
+        "max_score": max_score,
+        "percentage": percentage,
+        "passed_tests": passed_count,
+        "total_tests": total_tests,
+        "feedback": overall_feedback,
+        "student_output": student_output,
+        "results": testcase_results
+    }
