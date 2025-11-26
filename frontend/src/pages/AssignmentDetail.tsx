@@ -45,10 +45,10 @@ const AssignmentDetail: React.FC = () => {
 
       setTestResults(response.data.results || []);
       setShowResults(true);
-      
+
       const totalScore = response.data.score || 0;
       const maxScore = response.data.max_score || 0;
-      
+
       if (totalScore === maxScore) {
         toast.success(`Perfect! Score: ${totalScore}/${maxScore}`);
       } else if (totalScore > 0) {
