@@ -4,14 +4,29 @@ Submission service - Business logic for submission operations
 from typing import List, Optional
 from beanie import PydanticObjectId
 from models import Submission, SubmissionItem, GradeStatus
+from models.submission import CellAnswer
 from schemas import SubmissionCreate, SubmissionItemCreate
 
 async def create_submission(submission: SubmissionCreate) -> Submission:
     """Create a new submission"""
+    # Convert answers from schema to model format
+    answers = []
+    if submission.answers:
+        answers = [
+            CellAnswer(
+                cell_id=answer.cell_id,
+                code=answer.code,
+                score=0.0,
+                max_score=0.0
+            )
+            for answer in submission.answers
+        ]
+    
     db_submission = Submission(
         assignment_id=submission.assignment_id,
         student_id=submission.student_id,
-        code=submission.code,
+        code=submission.code,  # Legacy field
+        answers=answers,  # Multi-question answers
         status=GradeStatus.PENDING
     )
     await db_submission.insert()

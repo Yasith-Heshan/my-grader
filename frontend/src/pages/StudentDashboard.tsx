@@ -90,7 +90,7 @@ const StudentDashboard: React.FC = () => {
                       <Button
                         type="primary"
                         size="large"
-                        onClick={() => navigate(`/assignment/${assignment.id}`)}
+                        onClick={() => navigate(`/assignment/${assignment.id}/notebook`)}
                       >
                         {status.status === 'not_submitted' ? 'Start Assignment' : 'View Details'}
                       </Button>,

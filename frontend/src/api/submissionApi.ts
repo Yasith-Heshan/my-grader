@@ -1,11 +1,20 @@
 import axiosInstance from './axiosInstance';
 
+export interface CellAnswer {
+  cell_id: string;
+  code: string;
+  score?: number;
+  max_score?: number;
+  feedback?: string;
+}
+
 export interface Submission {
   id: string;
   assignment_id: string;
   student_id: string;
   student_name: string;
-  code: string;
+  code?: string;  // Legacy field
+  answers?: CellAnswer[];  // Multi-question answers
   submitted_at: string;
   graded: boolean;
   score?: number;
@@ -24,7 +33,8 @@ export interface TestResult {
 
 export interface CreateSubmissionDTO {
   assignment_id: string;
-  code: string;
+  code?: string;  // Legacy field
+  answers?: CellAnswer[];  // Multi-question answers
 }
 
 export interface GradeSubmissionDTO {

@@ -1,10 +1,20 @@
 import axiosInstance from './axiosInstance';
 
+export interface Question {
+  question_number: number;
+  title: string;
+  description: string;
+  cell_id: string;
+  points: number;
+  starter_code?: string;
+}
+
 export interface Assignment {
   id: string;
   _id?: string;
   title: string;
   description: string;
+  questions?: Question[];  // Optional for backward compatibility
   teacher_id: string;
   created_at: string;
   updated_at: string;
@@ -22,6 +32,7 @@ export interface TestCase {
 export interface CreateAssignmentDTO {
   title: string;
   description: string;
+  questions: Question[];
   teacher_id: string;
   due_date: string;
 }

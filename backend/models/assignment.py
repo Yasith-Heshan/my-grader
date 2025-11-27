@@ -2,13 +2,23 @@
 Assignment model
 """
 from beanie import Document, Indexed
-from pydantic import Field
-from typing import Optional
+from pydantic import Field, BaseModel
+from typing import Optional, List
 from datetime import datetime
+
+class Question(BaseModel):
+    """Embedded question within an assignment"""
+    question_number: int
+    title: str
+    description: str  # Markdown formatted question text
+    cell_id: str  # Unique identifier for the code cell
+    points: float = 10.0
+    starter_code: Optional[str] = "# Write your code here\n"
 
 class Assignment(Document):
     title: Indexed(str)
     description: Optional[str] = None
+    questions: List[Question] = Field(default_factory=list)
     teacher_id: Indexed(str)  # Reference to Teacher document ID
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)

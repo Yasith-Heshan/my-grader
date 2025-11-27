@@ -5,10 +5,27 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
+class CellAnswerCreate(BaseModel):
+    """Answer for a single question cell"""
+    cell_id: str
+    code: str
+
+class CellAnswerResponse(BaseModel):
+    """Response for a single question cell answer"""
+    cell_id: str
+    code: str
+    score: float = 0.0
+    max_score: float = 0.0
+    feedback: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
 class SubmissionCreate(BaseModel):
     assignment_id: str
     student_id: Optional[str] = None  # Optional - will use mock student if not provided
-    code: Optional[str] = None  # Student's submitted code
+    code: Optional[str] = None  # Legacy: Single code field for backward compatibility
+    answers: Optional[List[CellAnswerCreate]] = None  # Multi-question answers
 
 class SubmissionItemCreate(BaseModel):
     test_case_id: str
@@ -36,7 +53,8 @@ class SubmissionResponse(BaseModel):
     id: str = Field(..., alias="_id")
     assignment_id: str
     student_id: str
-    code: Optional[str] = None
+    code: Optional[str] = None  # Legacy field
+    answers: List[CellAnswerResponse] = []  # Multi-question answers
     status: str
     graded: bool = False
     total_score: float = 0.0

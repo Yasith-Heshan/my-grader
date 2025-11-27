@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AssignmentDetail from './pages/AssignmentDetail';
+import AssignmentNotebook from './pages/AssignmentNotebook';
 import NotebookPage from './pages/NotebookPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
@@ -55,6 +56,14 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={['student']}>
               <AssignmentDetail />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assignment/:id/notebook"
+          element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <AssignmentNotebook />
             </ProtectedRoute>
           }
         />

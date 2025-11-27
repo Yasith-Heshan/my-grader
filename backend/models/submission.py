@@ -2,8 +2,8 @@
 Submission and SubmissionItem models
 """
 from beanie import Document, Indexed
-from pydantic import Field
-from typing import Optional
+from pydantic import Field, BaseModel
+from typing import Optional, List
 from datetime import datetime
 from enum import Enum
 
@@ -13,10 +13,19 @@ class GradeStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
 
+class CellAnswer(BaseModel):
+    """Individual answer for a question cell"""
+    cell_id: str
+    code: str
+    score: float = 0.0
+    max_score: float = 0.0
+    feedback: Optional[str] = None
+
 class Submission(Document):
     assignment_id: Indexed(str)  # Reference to Assignment document ID
     student_id: Indexed(str)  # Reference to Student document ID
-    code: Optional[str] = None  # Student's submitted code
+    code: Optional[str] = None  # Legacy: Single code field for backward compatibility
+    answers: List[CellAnswer] = Field(default_factory=list)  # Multi-question answers
     status: GradeStatus = GradeStatus.PENDING
     total_score: float = 0.0
     max_score: float = 0.0

@@ -21,6 +21,9 @@ def serialize_document(doc: Document) -> dict:
     if doc.id:
         data["_id"] = str(doc.id)
         data["id"] = str(doc.id)  # Add id alias for frontend compatibility
+    # Ensure questions are included for Assignment documents
+    if hasattr(doc, 'questions') and doc.questions:
+        data["questions"] = [q.model_dump() if hasattr(q, 'model_dump') else q for q in doc.questions]
     return data
 
 def serialize_documents(docs: List[Document]) -> List[dict]:

@@ -24,6 +24,9 @@ def serialize_document(doc: Document) -> dict:
     # Add graded field for Submission documents
     if hasattr(doc, 'status') and hasattr(doc, 'graded'):
         data["graded"] = doc.graded
+    # Ensure questions are included for Assignment documents
+    if hasattr(doc, 'questions') and doc.questions:
+        data["questions"] = [q.model_dump() if hasattr(q, 'model_dump') else q for q in doc.questions]
     return data
 
 def serialize_documents(docs: List[Document]) -> List[dict]:

@@ -4,13 +4,30 @@ Assignment service - Business logic for assignment operations
 from typing import List, Optional
 from beanie import PydanticObjectId
 from models import Assignment, TestCase
+from models.assignment import Question
 from schemas import AssignmentCreate, TestCaseCreate
 
 async def create_assignment(assignment: AssignmentCreate) -> Assignment:
     """Create a new assignment"""
+    # Convert question schemas to model Question objects
+    questions = []
+    if assignment.questions:
+        questions = [
+            Question(
+                question_number=q.question_number,
+                title=q.title,
+                description=q.description,
+                cell_id=q.cell_id,
+                points=q.points,
+                starter_code=q.starter_code
+            )
+            for q in assignment.questions
+        ]
+    
     db_assignment = Assignment(
         title=assignment.title,
         description=assignment.description,
+        questions=questions,
         teacher_id=assignment.teacher_id,
         due_date=assignment.due_date
     )
