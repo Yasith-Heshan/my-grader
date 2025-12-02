@@ -31,19 +31,29 @@ interface QuestionCellProps {
   question: Question;
   code: string;
   onCodeChange: (code: string) => void;
+  onRun: () => void;
   onTest: () => void;
+  running: boolean;
   testing: boolean;
+  output?: string;
+  error?: string;
+  onShiftEnter?: () => void;
 }
 
 const QuestionCell: React.FC<QuestionCellProps> = ({
   question,
   code,
   onCodeChange,
+  onRun,
   onTest,
+  running,
   testing,
+  output,
+  error,
+  onShiftEnter,
 }) => {
   return (
-    <Card 
+    <Card
       style={{ marginBottom: 24, border: '1px solid #e8e8e8' }}
       bodyStyle={{ padding: 0 }}
     >
@@ -82,27 +92,74 @@ const QuestionCell: React.FC<QuestionCellProps> = ({
           <Text type="secondary" style={{ fontFamily: 'monospace', fontSize: 12 }}>
             In [{question.question_number}]:
           </Text>
-          <Button
-            size="small"
-            type="primary"
-            icon={<PlayCircleOutlined />}
-            onClick={onTest}
-            loading={testing}
-          >
-            Run Tests
-          </Button>
+          <Space>
+            <Button
+              size="small"
+              icon={<PlayCircleOutlined />}
+              onClick={onRun}
+              loading={running}
+            >
+              Run
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              icon={<PlayCircleOutlined />}
+              onClick={onTest}
+              loading={testing}
+            >
+              Run Tests
+            </Button>
+          </Space>
         </div>
-        <div style={{
-          border: '1px solid #d9d9d9',
-          borderRadius: '4px',
-          overflow: 'hidden',
-        }}>
+        <div 
+          style={{
+            border: '1px solid #d9d9d9',
+            borderRadius: '4px',
+            overflow: 'hidden',
+          }}
+          data-cell-id={question.cell_id}
+        >
           <CodeEditor
             value={code}
             onChange={(value) => onCodeChange(value || '')}
             height="200px"
+            onCtrlEnter={onRun}
+            onShiftEnter={() => {
+              onRun();
+              if (onShiftEnter) {
+                setTimeout(() => onShiftEnter(), 100);
+              }
+            }}
           />
         </div>
+        
+        {/* Output Display */}
+        {(output || error) && (
+          <div style={{ marginTop: 12 }}>
+            <Text type="secondary" style={{ fontFamily: 'monospace', fontSize: 12 }}>
+              Output:
+            </Text>
+            <div style={{
+              marginTop: 4,
+              padding: '12px',
+              background: error ? '#fff2f0' : '#f6f6f6',
+              border: `1px solid ${error ? '#ffccc7' : '#d9d9d9'}`,
+              borderRadius: '4px',
+              fontFamily: 'monospace',
+              fontSize: '13px',
+              whiteSpace: 'pre-wrap',
+              maxHeight: '200px',
+              overflowY: 'auto',
+            }}>
+              {error ? (
+                <Text type="danger">{error}</Text>
+              ) : (
+                <Text>{output}</Text>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </Card>
   );
@@ -111,12 +168,19 @@ const QuestionCell: React.FC<QuestionCellProps> = ({
 const AssignmentNotebook: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   const [answers, setAnswers] = useState<Map<string, string>>(new Map());
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [testing, setTesting] = useState(false);
   const [testingCell, setTestingCell] = useState<string | null>(null);
+  const [running, setRunning] = useState(false);
+  const [runningCell, setRunningCell] = useState<string | null>(null);
+  const [cellOutputs, setCellOutputs] = useState<Map<string, { output?: string; error?: string }>>(new Map());
   const [showResults, setShowResults] = useState(false);
+  
+  // Shared notebook state - variables persist across cells
+  const [notebookVariables, setNotebookVariables] = useState<any>({});
+  const [notebookFunctions, setNotebookFunctions] = useState<any>({});
 
   const { data: assignment, isLoading } = useAssignment(id || '');
   const submitMutation = useCreateSubmission();
@@ -136,12 +200,218 @@ const AssignmentNotebook: React.FC = () => {
     setAnswers(new Map(answers.set(cellId, code)));
   };
 
+  const focusNextCell = (currentCellId: string) => {
+    const questionsList = assignment?.questions || [];
+    const currentIndex = questionsList.findIndex(q => q.cell_id === currentCellId);
+    if (currentIndex >= 0 && currentIndex < questionsList.length - 1) {
+      // Focus next cell by finding the next editor
+      const nextCellId = questionsList[currentIndex + 1].cell_id;
+      // Try to focus the next cell's editor
+      setTimeout(() => {
+        const nextEditor = document.querySelector(`[data-cell-id="${nextCellId}"]`);
+        if (nextEditor) {
+          (nextEditor as HTMLElement).focus();
+        }
+      }, 150);
+    }
+  };
+
+  const handleRunCell = async (cellId: string) => {
+    setRunningCell(cellId);
+    setRunning(true);
+
+    try {
+      const code = answers.get(cellId) || '';
+      
+      // Create a console capture
+      const outputs: string[] = [];
+      const errors: string[] = [];
+
+      // Create a simple print function
+      const print = (...args: any[]) => {
+        outputs.push(args.map(arg => 
+          typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+        ).join(' '));
+      };
+
+      try {
+        // Use shared notebook variables and functions
+        const variables = { ...notebookVariables };
+        const functions = { ...notebookFunctions };
+        
+        const executionContext: any = {
+          print,
+          console: {
+            log: print,
+            error: (...args: any[]) => errors.push(args.join(' ')),
+          },
+          // Add common Python functions
+          len: (arr: any) => Array.isArray(arr) || typeof arr === 'string' ? arr.length : 0,
+          range: (start: number, end?: number, step: number = 1) => {
+            if (end === undefined) { end = start; start = 0; }
+            const result = [];
+            for (let i = start; i < end; i += step) result.push(i);
+            return result;
+          },
+          sum: (arr: number[]) => arr.reduce((a, b) => a + b, 0),
+          max: (...args: any[]) => Math.max(...args.flat()),
+          min: (...args: any[]) => Math.min(...args.flat()),
+          abs: Math.abs,
+          round: Math.round,
+          Math,
+          ...functions, // Include previously defined functions
+        };
+
+        // Parse and execute line by line
+        const lines = code.trim().split('\n');
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line || line.startsWith('#')) continue;
+          
+          try {
+            // Check if it's an assignment
+            if (line.includes('=') && !line.includes('==') && !line.includes('!=') && !line.includes('<=') && !line.includes('>=')) {
+              const match = line.match(/^(\w+)\s*=\s*(.+)$/);
+              if (match) {
+                const varName = match[1];
+                let value = match[2];
+                
+                // Convert Python literals
+                value = value
+                  .replace(/^'([^']*)'$/, '"$1"')
+                  .replace(/^"([^"]*)"$/, '"$1"')
+                  .replace(/\bTrue\b/g, 'true')
+                  .replace(/\bFalse\b/g, 'false')
+                  .replace(/\bNone\b/g, 'null');
+                
+                // Evaluate the value with access to all variables
+                try {
+                  const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), `return ${value};`);
+                  variables[varName] = evalFunc(...Object.values(executionContext), ...Object.values(variables));
+                } catch (e) {
+                  variables[varName] = value;
+                }
+                continue;
+              }
+            }
+            
+            // Check if it's a print statement
+            if (line.startsWith('print(')) {
+              const content = line.match(/print\((.*)\)/)?.[1];
+              if (content) {
+                try {
+                  // Split by comma but handle strings properly
+                  const args = content.split(',').map(arg => arg.trim());
+                  const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), 
+                    `return [${args.join(', ')}];`);
+                  const values = evalFunc(...Object.values(executionContext), ...Object.values(variables));
+                  print(...values);
+                } catch (e) {
+                  errors.push(`Error in print: ${e}`);
+                }
+              }
+              continue;
+            }
+            
+            // Check if it's a function definition
+            if (line.startsWith('def ')) {
+              const funcLines = [line];
+              let j = i + 1;
+              while (j < lines.length && (lines[j].startsWith('    ') || lines[j].startsWith('\t') || lines[j].trim() === '')) {
+                if (lines[j].trim()) funcLines.push(lines[j]);
+                j++;
+              }
+              i = j - 1;
+              
+              const funcCode = funcLines.join('\n')
+                .replace(/def\s+(\w+)\s*\((.*?)\):/g, 'function $1($2) {')
+                .replace(/:\s*$/gm, ' {')
+                .replace(/return\s+(.+)/g, 'return $1;')
+                .replace(/\bTrue\b/g, 'true')
+                .replace(/\bFalse\b/g, 'false')
+                .replace(/\bNone\b/g, 'null')
+                .replace(/if\s+(.+):/g, 'if ($1) {')
+                .replace(/elif\s+(.+):/g, '} else if ($1) {')
+                .replace(/else:/g, '} else {');
+              
+              const openBraces = (funcCode.match(/\{/g) || []).length;
+              const closeBraces = (funcCode.match(/\}/g) || []).length;
+              const finalFuncCode = funcCode + '\n' + '}'.repeat(Math.max(0, openBraces - closeBraces));
+              
+              const funcName = line.match(/def\s+(\w+)/)?.[1];
+              if (funcName) {
+                const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), finalFuncCode + `; return ${funcName};`);
+                functions[funcName] = evalFunc(...Object.values(executionContext), ...Object.values(variables));
+              }
+              continue;
+            }
+            
+            // If it's the last line and it's just a variable/expression, display it
+            if (i === lines.length - 1 && !line.includes('(') && !line.startsWith('print')) {
+              try {
+                const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), `return ${line};`);
+                const result = evalFunc(...Object.values(executionContext), ...Object.values(variables));
+                if (result !== undefined) {
+                  outputs.push(typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result));
+                }
+              } catch (e) {
+                // Ignore if not a valid expression
+              }
+            } else if (line.includes('(') && !line.startsWith('def ') && !line.startsWith('print(')) {
+              try {
+                const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), `return ${line};`);
+                const result = evalFunc(...Object.values(executionContext), ...Object.values(variables));
+                if (result !== undefined && i === lines.length - 1) {
+                  outputs.push(typeof result === 'object' ? JSON.stringify(result, null, 2) : String(result));
+                }
+              } catch (e) {
+                // Ignore
+              }
+            }
+          } catch (err) {
+            // Continue to next line
+          }
+        }
+
+        // Update shared notebook state with new variables and functions
+        setNotebookVariables((prev: any) => ({ ...prev, ...variables }));
+        setNotebookFunctions((prev: any) => ({ ...prev, ...functions }));
+
+        const output = outputs.length > 0 ? outputs.join('\n') : '(No output)';
+        const errorOutput = errors.length > 0 ? '\nErrors:\n' + errors.join('\n') : '';
+        
+        setCellOutputs(new Map(cellOutputs.set(cellId, {
+          output: output + errorOutput,
+          error: undefined,
+        })));
+
+        toast.success('Code executed successfully');
+      } catch (error: any) {
+        const output = outputs.length > 0 ? outputs.join('\n') : '';
+        setCellOutputs(new Map(cellOutputs.set(cellId, {
+          output: output || undefined,
+          error: `${error.name || 'Error'}: ${error.message || String(error)}`,
+        })));
+        toast.error('Code execution failed');
+      }
+    } catch (error: any) {
+      setCellOutputs(new Map(cellOutputs.set(cellId, {
+        error: 'Failed to execute code: ' + (error.message || String(error)),
+      })));
+      toast.error('Failed to execute code');
+    } finally {
+      setRunning(false);
+      setRunningCell(null);
+    }
+  };
+
   const handleTestCell = async (cellId: string) => {
     if (!id) return;
 
     setTestingCell(cellId);
     setTesting(true);
-    
+
     try {
       const response = await axiosInstance.post('/api/student/evaluate-cell', {
         assignment_id: id,
@@ -301,8 +571,13 @@ const AssignmentNotebook: React.FC = () => {
               question={question}
               code={answers.get(question.cell_id) || ''}
               onCodeChange={(code) => handleCodeChange(question.cell_id, code)}
+              onRun={() => handleRunCell(question.cell_id)}
               onTest={() => handleTestCell(question.cell_id)}
+              running={running && runningCell === question.cell_id}
               testing={testing && testingCell === question.cell_id}
+              output={cellOutputs.get(question.cell_id)?.output}
+              error={cellOutputs.get(question.cell_id)?.error}
+              onShiftEnter={() => focusNextCell(question.cell_id)}
             />
           ))}
 

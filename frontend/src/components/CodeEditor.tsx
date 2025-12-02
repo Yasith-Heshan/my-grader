@@ -8,6 +8,8 @@ interface CodeEditorProps {
   height?: string;
   readOnly?: boolean;
   language?: string;
+  onCtrlEnter?: () => void;
+  onShiftEnter?: () => void;
 }
 
 const CodeEditor: React.FC<CodeEditorProps> = ({
@@ -16,7 +18,24 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
   height = '400px',
   readOnly = false,
   language = 'python',
+  onCtrlEnter,
+  onShiftEnter,
 }) => {
+  const handleEditorDidMount = (editor: any, monaco: any) => {
+    // Add keyboard shortcuts
+    if (onCtrlEnter) {
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
+        onCtrlEnter();
+      });
+    }
+    
+    if (onShiftEnter) {
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        onShiftEnter();
+      });
+    }
+  };
+
   return (
     <Card>
       <Editor
@@ -25,6 +44,7 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
         language={language}
         value={value}
         onChange={onChange}
+        onMount={handleEditorDidMount}
         theme="vs-dark"
         options={{
           readOnly,

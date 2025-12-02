@@ -52,9 +52,9 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
     if (newIndex < 0 || newIndex >= questions.length) return;
 
     const updatedQuestions = [...questions];
-    [updatedQuestions[index], updatedQuestions[newIndex]] = 
+    [updatedQuestions[index], updatedQuestions[newIndex]] =
       [updatedQuestions[newIndex], updatedQuestions[index]];
-    
+
     // Renumber questions
     const renumbered = updatedQuestions.map((q, i) => ({
       ...q,
@@ -154,9 +154,9 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
 
         <Form.Item>
           <Space>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               disabled={questions.length === 0}
             >
