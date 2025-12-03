@@ -1,6 +1,5 @@
 import React from 'react';
 import Editor from '@monaco-editor/react';
-import { Card } from 'antd';
 
 interface CodeEditorProps {
   value: string;
@@ -25,39 +24,37 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
     // Add keyboard shortcuts
     if (onCtrlEnter) {
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
-        onCtrlEnter();
+        setTimeout(() => onCtrlEnter(), 0);
       });
     }
-    
+
     if (onShiftEnter) {
       editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
-        onShiftEnter();
+        setTimeout(() => onShiftEnter(), 0);
       });
     }
   };
 
   return (
-    <Card>
-      <Editor
-        height={height}
-        defaultLanguage={language}
-        language={language}
-        value={value}
-        onChange={onChange}
-        onMount={handleEditorDidMount}
-        theme="vs-dark"
-        options={{
-          readOnly,
-          minimap: { enabled: false },
-          fontSize: 14,
-          lineNumbers: 'on',
-          scrollBeyondLastLine: false,
-          automaticLayout: true,
-          tabSize: 4,
-          wordWrap: 'on',
-        }}
-      />
-    </Card>
+    <Editor
+      height={height}
+      defaultLanguage={language}
+      language={language}
+      value={value}
+      onChange={onChange}
+      onMount={handleEditorDidMount}
+      theme="vs-dark"
+      options={{
+        readOnly,
+        minimap: { enabled: false },
+        fontSize: 14,
+        lineNumbers: 'on',
+        scrollBeyondLastLine: false,
+        automaticLayout: true,
+        tabSize: 4,
+        wordWrap: 'on',
+      }}
+    />
   );
 };
 

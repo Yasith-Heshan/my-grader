@@ -112,7 +112,7 @@ const QuestionCell: React.FC<QuestionCellProps> = ({
             </Button>
           </Space>
         </div>
-        <div 
+        <div
           style={{
             border: '1px solid #d9d9d9',
             borderRadius: '4px',
@@ -133,7 +133,7 @@ const QuestionCell: React.FC<QuestionCellProps> = ({
             }}
           />
         </div>
-        
+
         {/* Output Display */}
         {(output || error) && (
           <div style={{ marginTop: 12 }}>
@@ -177,7 +177,7 @@ const AssignmentNotebook: React.FC = () => {
   const [runningCell, setRunningCell] = useState<string | null>(null);
   const [cellOutputs, setCellOutputs] = useState<Map<string, { output?: string; error?: string }>>(new Map());
   const [showResults, setShowResults] = useState(false);
-  
+
   // Shared notebook state - variables persist across cells
   const [notebookVariables, setNotebookVariables] = useState<any>({});
   const [notebookFunctions, setNotebookFunctions] = useState<any>({});
@@ -222,14 +222,14 @@ const AssignmentNotebook: React.FC = () => {
 
     try {
       const code = answers.get(cellId) || '';
-      
+
       // Create a console capture
       const outputs: string[] = [];
       const errors: string[] = [];
 
       // Create a simple print function
       const print = (...args: any[]) => {
-        outputs.push(args.map(arg => 
+        outputs.push(args.map(arg =>
           typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
         ).join(' '));
       };
@@ -238,7 +238,7 @@ const AssignmentNotebook: React.FC = () => {
         // Use shared notebook variables and functions
         const variables = { ...notebookVariables };
         const functions = { ...notebookFunctions };
-        
+
         const executionContext: any = {
           print,
           console: {
@@ -264,11 +264,11 @@ const AssignmentNotebook: React.FC = () => {
 
         // Parse and execute line by line
         const lines = code.trim().split('\n');
-        
+
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i].trim();
           if (!line || line.startsWith('#')) continue;
-          
+
           try {
             // Check if it's an assignment
             if (line.includes('=') && !line.includes('==') && !line.includes('!=') && !line.includes('<=') && !line.includes('>=')) {
@@ -276,7 +276,7 @@ const AssignmentNotebook: React.FC = () => {
               if (match) {
                 const varName = match[1];
                 let value = match[2];
-                
+
                 // Convert Python literals
                 value = value
                   .replace(/^'([^']*)'$/, '"$1"')
@@ -284,7 +284,7 @@ const AssignmentNotebook: React.FC = () => {
                   .replace(/\bTrue\b/g, 'true')
                   .replace(/\bFalse\b/g, 'false')
                   .replace(/\bNone\b/g, 'null');
-                
+
                 // Evaluate the value with access to all variables
                 try {
                   const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), `return ${value};`);
@@ -295,7 +295,7 @@ const AssignmentNotebook: React.FC = () => {
                 continue;
               }
             }
-            
+
             // Check if it's a print statement
             if (line.startsWith('print(')) {
               const content = line.match(/print\((.*)\)/)?.[1];
@@ -303,7 +303,7 @@ const AssignmentNotebook: React.FC = () => {
                 try {
                   // Split by comma but handle strings properly
                   const args = content.split(',').map(arg => arg.trim());
-                  const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), 
+                  const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables),
                     `return [${args.join(', ')}];`);
                   const values = evalFunc(...Object.values(executionContext), ...Object.values(variables));
                   print(...values);
@@ -313,7 +313,7 @@ const AssignmentNotebook: React.FC = () => {
               }
               continue;
             }
-            
+
             // Check if it's a function definition
             if (line.startsWith('def ')) {
               const funcLines = [line];
@@ -323,7 +323,7 @@ const AssignmentNotebook: React.FC = () => {
                 j++;
               }
               i = j - 1;
-              
+
               const funcCode = funcLines.join('\n')
                 .replace(/def\s+(\w+)\s*\((.*?)\):/g, 'function $1($2) {')
                 .replace(/:\s*$/gm, ' {')
@@ -334,11 +334,11 @@ const AssignmentNotebook: React.FC = () => {
                 .replace(/if\s+(.+):/g, 'if ($1) {')
                 .replace(/elif\s+(.+):/g, '} else if ($1) {')
                 .replace(/else:/g, '} else {');
-              
+
               const openBraces = (funcCode.match(/\{/g) || []).length;
               const closeBraces = (funcCode.match(/\}/g) || []).length;
               const finalFuncCode = funcCode + '\n' + '}'.repeat(Math.max(0, openBraces - closeBraces));
-              
+
               const funcName = line.match(/def\s+(\w+)/)?.[1];
               if (funcName) {
                 const evalFunc = new Function(...Object.keys(executionContext), ...Object.keys(variables), finalFuncCode + `; return ${funcName};`);
@@ -346,7 +346,7 @@ const AssignmentNotebook: React.FC = () => {
               }
               continue;
             }
-            
+
             // If it's the last line and it's just a variable/expression, display it
             if (i === lines.length - 1 && !line.includes('(') && !line.startsWith('print')) {
               try {
@@ -380,25 +380,37 @@ const AssignmentNotebook: React.FC = () => {
 
         const output = outputs.length > 0 ? outputs.join('\n') : '(No output)';
         const errorOutput = errors.length > 0 ? '\nErrors:\n' + errors.join('\n') : '';
-        
-        setCellOutputs(new Map(cellOutputs.set(cellId, {
-          output: output + errorOutput,
-          error: undefined,
-        })));
+
+        setCellOutputs((prev) => {
+          const newOutputs = new Map(prev);
+          newOutputs.set(cellId, {
+            output: output + errorOutput,
+            error: undefined,
+          });
+          return newOutputs;
+        });
 
         toast.success('Code executed successfully');
       } catch (error: any) {
         const output = outputs.length > 0 ? outputs.join('\n') : '';
-        setCellOutputs(new Map(cellOutputs.set(cellId, {
-          output: output || undefined,
-          error: `${error.name || 'Error'}: ${error.message || String(error)}`,
-        })));
+        setCellOutputs((prev) => {
+          const newOutputs = new Map(prev);
+          newOutputs.set(cellId, {
+            output: output || undefined,
+            error: `${error.name || 'Error'}: ${error.message || String(error)}`,
+          });
+          return newOutputs;
+        });
         toast.error('Code execution failed');
       }
     } catch (error: any) {
-      setCellOutputs(new Map(cellOutputs.set(cellId, {
-        error: 'Failed to execute code: ' + (error.message || String(error)),
-      })));
+      setCellOutputs((prev) => {
+        const newOutputs = new Map(prev);
+        newOutputs.set(cellId, {
+          error: 'Failed to execute code: ' + (error.message || String(error)),
+        });
+        return newOutputs;
+      });
       toast.error('Failed to execute code');
     } finally {
       setRunning(false);
