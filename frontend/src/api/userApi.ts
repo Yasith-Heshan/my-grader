@@ -22,24 +22,24 @@ export interface RegisterDTO {
 export const userApi = {
   // Login
   login: async (data: LoginDTO): Promise<{ user: User; token: string }> => {
-    const response = await axiosInstance.post('/auth/login', data);
+    const response = await axiosInstance.post('/api/auth/login', data);
     return response.data;
   },
 
   // Register
   register: async (data: RegisterDTO): Promise<{ user: User; token: string }> => {
-    const response = await axiosInstance.post('/auth/register', data);
+    const response = await axiosInstance.post('/api/auth/register', data);
     return response.data;
   },
 
   // Get current user
   getCurrentUser: async (): Promise<User> => {
-    const response = await axiosInstance.get('/auth/me');
+    const response = await axiosInstance.get('/api/auth/me');
     return response.data;
   },
 
   // Logout
   logout: async (): Promise<void> => {
-    await axiosInstance.post('/auth/logout');
+    await axiosInstance.post('/api/auth/logout');
   },
 };

@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 import traceback
 
 from routers import teacher, student
+from routers import auth
 from database import connect_to_mongo, close_mongo_connection
 
 @asynccontextmanager
@@ -73,6 +74,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Include routers
 app.include_router(teacher.router, prefix="/api/teacher", tags=["Teacher"])
 app.include_router(student.router, prefix="/api/student", tags=["Student"])
+app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 
 @app.get("/")
 async def root():

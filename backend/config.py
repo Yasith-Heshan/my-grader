@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     app_name: str = "Python Notebook Grading System"
     app_version: str = "2.0.0"
     debug: bool = True
+    # Security settings
+    secret_key: str = "change-me-to-a-secure-random-value"
+    jwt_expiration_minutes: int = 60 * 24  # 1 day by default
     
     class Config:
         env_file = ".env"

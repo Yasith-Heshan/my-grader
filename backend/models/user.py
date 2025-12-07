@@ -9,6 +9,8 @@ from datetime import datetime
 class Teacher(Document):
     name: str
     email: Indexed(EmailStr, unique=True)
+    # Optional password hash for authentication
+    password_hash: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
     class Settings:
@@ -28,6 +30,8 @@ class Teacher(Document):
 class Student(Document):
     name: str
     email: Indexed(EmailStr, unique=True)
+    # Optional password hash for authentication
+    password_hash: Optional[str] = None
     student_number: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
     
