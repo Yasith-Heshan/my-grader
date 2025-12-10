@@ -8,8 +8,7 @@ import {
   LogoutOutlined,
   UserOutlined,
 } from '@ant-design/icons';
-import { useStoreState } from '../store';
-import { useLogout } from '../hooks/useUser';
+import { useAuth } from '../context/AuthContext';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -17,11 +16,11 @@ const { Text } = Typography;
 const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const currentUser = useStoreState((state) => state.user.currentUser);
-  const logoutMutation = useLogout();
+  const { user: currentUser, logout } = useAuth();
 
-  const handleLogout = () => {
-    logoutMutation.mutate();
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   const teacherMenuItems = [
@@ -29,6 +28,16 @@ const Navbar: React.FC = () => {
       key: '/teacher',
       icon: <HomeOutlined />,
       label: <Link to="/teacher">Dashboard</Link>,
+    },
+    {
+      key: '/teacher/summary',
+      icon: <FileTextOutlined />,
+      label: <Link to="/teacher/summary">Summary</Link>,
+    },
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: <Link to="/profile">Profile</Link>,
     },
     {
       key: '/users',
@@ -42,6 +51,21 @@ const Navbar: React.FC = () => {
       key: '/student',
       icon: <HomeOutlined />,
       label: <Link to="/student">Dashboard</Link>,
+    },
+    {
+      key: '/assignments',
+      icon: <BookOutlined />,
+      label: <Link to="/student">Assignments</Link>,
+    },
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: <Link to="/profile">Profile</Link>,
+    },
+    {
+      key: '/users',
+      icon: <UserOutlined />,
+      label: <Link to="/users">Users</Link>,
     },
   ];
 
@@ -86,13 +110,7 @@ const Navbar: React.FC = () => {
           <Text style={{ color: 'white' }}>
             {currentUser.name} ({currentUser.role})
           </Text>
-          <Button
-            type="primary"
-            danger
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-            loading={logoutMutation.isPending}
-          >
+          <Button type="primary" danger icon={<LogoutOutlined />} onClick={handleLogout}>
             Logout
           </Button>
         </Space>

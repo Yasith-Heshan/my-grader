@@ -6,8 +6,16 @@ import { Table, Card, Row, Col, Typography, Spin } from 'antd';
 const { Title } = Typography;
 
 const UserManagement: React.FC = () => {
-  const { data: teachers, isLoading: loadingTeachers } = useQuery(['teachers'], userApi.getTeachers, { retry: 0 });
-  const { data: students, isLoading: loadingStudents } = useQuery(['students'], userApi.getStudents, { retry: 0 });
+  const { data: teachers, isLoading: loadingTeachers } = useQuery({
+    queryKey: ['teachers'],
+    queryFn: userApi.getTeachers,
+    retry: 0,
+  });
+  const { data: students, isLoading: loadingStudents } = useQuery({
+    queryKey: ['students'],
+    queryFn: userApi.getStudents,
+    retry: 0,
+  });
 
   const teacherColumns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },

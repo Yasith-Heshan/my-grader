@@ -1,6 +1,6 @@
 import React from 'react';
-import { Layout, Card, List, Button, Typography, Tag, Empty, Space, Dropdown } from 'antd';
-import { CalendarOutlined, FileTextOutlined, TrophyOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Layout, Card, List, Button, Typography, Tag, Empty, Space } from 'antd';
+import { CalendarOutlined, FileTextOutlined, TrophyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useStudentAssignments } from '../hooks/useAssignments';
@@ -12,7 +12,7 @@ const { Title, Text, Paragraph } = Typography;
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+    const { user } = useAuth();
   const { data: assignments, isLoading: assignmentsLoading } = useStudentAssignments();
   const { data: submissions, isLoading: submissionsLoading } = useMySubmissions();
 
@@ -35,31 +35,6 @@ const StudentDashboard: React.FC = () => {
     <Content style={{ padding: '24px', minHeight: '100vh' }}>
       <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={2} style={{ margin: 0 }}>Student Dashboard</Title>
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'profile',
-                icon: <UserOutlined />,
-                label: `${user?.name} (${user?.email})`,
-              },
-              {
-                type: 'divider',
-              },
-              {
-                key: 'logout',
-                icon: <LogoutOutlined />,
-                label: 'Logout',
-                onClick: () => {
-                  logout();
-                  navigate('/login');
-                },
-              },
-            ],
-          }}
-        >
-          <Button icon={<UserOutlined />}>{user?.name}</Button>
-        </Dropdown>
       </div>
 
       <Space direction="vertical" size="large" style={{ width: '100%', display: 'flex' }}>

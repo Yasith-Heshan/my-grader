@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Card, Button, Space, Table, Modal, Typography, Spin, Empty, Tabs, Dropdown } from 'antd';
-import { PlusOutlined, EyeOutlined, DeleteOutlined, UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAssignments, useDeleteAssignment, useCreateAssignment } from '../hooks/useAssignments';
@@ -17,7 +17,7 @@ const { Title } = Typography;
 
 const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState(false);
@@ -152,31 +152,6 @@ const TeacherDashboard: React.FC = () => {
     <Content style={{ padding: '24px' }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Title level={3} style={{ margin: 0 }}>Teacher Dashboard</Title>
-        <Dropdown
-          menu={{
-            items: [
-              {
-                key: 'profile',
-                icon: <UserOutlined />,
-                label: `${user?.name} (${user?.email})`,
-              },
-              {
-                type: 'divider',
-              },
-              {
-                key: 'logout',
-                icon: <LogoutOutlined />,
-                label: 'Logout',
-                onClick: () => {
-                  logout();
-                  navigate('/login');
-                },
-              },
-            ],
-          }}
-        >
-          <Button icon={<UserOutlined />}>{user?.name}</Button>
-        </Dropdown>
       </div>
       <Card>
         <Space direction="vertical" size="large" style={{ width: '100%' }}>

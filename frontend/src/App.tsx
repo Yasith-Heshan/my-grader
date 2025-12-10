@@ -5,10 +5,15 @@ import { StoreProvider } from 'easy-peasy';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import store from './store';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import UserManagement from './pages/UserManagement';
+import Navbar from './components/Navbar';
+import { useAuth } from './context/AuthContext';
+import Profile from './pages/Profile';
+import TeacherSummary from './pages/TeacherSummary';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AssignmentDetail from './pages/AssignmentDetail';
@@ -28,8 +33,11 @@ const queryClient = new QueryClient({
 });
 
 const AppContent: React.FC = () => {
+  const { isAuthenticated, initialized } = useAuth();
+
   return (
     <Router>
+      {initialized && isAuthenticated && <Navbar />}
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
@@ -91,6 +99,26 @@ const AppContent: React.FC = () => {
           }
         />
 
+        {/* Profile - accessible to both roles */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Teacher summary */}
+        <Route
+          path="/teacher/summary"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <TeacherSummary />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Redirect root to login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -117,7 +145,9 @@ function App() {
     <StoreProvider store={store}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppContent />
+          <ErrorBoundary>
+            <AppContent />
+          </ErrorBoundary>
         </AuthProvider>
       </QueryClientProvider>
     </StoreProvider>
