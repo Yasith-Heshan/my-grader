@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, status, Depends, Request
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
-from services import teacher_service, student_service
-from models import Teacher, Student
+from services import teacher_service, student_service, admin_service
+from models import Teacher, Student, Admin
 from utils.security import (
     hash_password,
     verify_password,
@@ -77,6 +77,28 @@ async def register(payload: RegisterRequest):
             "token": token,
         }
 
+    if payload.role == "admin":
+        existing = await admin_service.get_admin_by_email(payload.email)
+        if existing:
+            raise HTTPException(status_code=400, detail="Admin already exists")
+
+        admin = Admin(
+            name=payload.name,
+            email=payload.email,
+            password_hash=hash_password(payload.password),
+        )
+        await admin.insert()
+        token = create_access_token(subject=str(admin.id))
+        return {
+            "user": {
+                "id": str(admin.id),
+                "name": admin.name,
+                "email": admin.email,
+                "role": "admin",
+            },
+            "token": token,
+        }
+
     raise HTTPException(status_code=400, detail="Invalid role")
 
 
@@ -117,6 +139,23 @@ async def login(payload: LoginRequest):
             "token": token,
         }
 
+    if payload.role == "admin":
+        admin = await admin_service.get_admin_by_email(payload.email)
+        if not admin or not admin.password_hash:
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        if not verify_password(payload.password, admin.password_hash):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        token = create_access_token(subject=str(admin.id))
+        return {
+            "user": {
+                "id": str(admin.id),
+                "name": admin.name,
+                "email": admin.email,
+                "role": "admin",
+            },
+            "token": token,
+        }
+
     # If no role specified, try both
     teacher = await teacher_service.get_teacher_by_email(payload.email)
     if (
@@ -148,6 +187,23 @@ async def login(payload: LoginRequest):
                 "name": student.name,
                 "email": student.email,
                 "role": "student",
+            },
+            "token": token,
+        }
+
+    admin = await admin_service.get_admin_by_email(payload.email)
+    if (
+        admin
+        and admin.password_hash
+        and verify_password(payload.password, admin.password_hash)
+    ):
+        token = create_access_token(subject=str(admin.id))
+        return {
+            "user": {
+                "id": str(admin.id),
+                "name": admin.name,
+                "email": admin.email,
+                "role": "admin",
             },
             "token": token,
         }
@@ -195,6 +251,19 @@ async def me(request: Request):
                 "name": student.name,
                 "email": student.email,
                 "role": "student",
+            }
+
+        try:
+            admin = await admin_service.get_admin(sub)
+        except Exception:
+            admin = None
+
+        if admin:
+            return {
+                "id": str(admin.id),
+                "name": admin.name,
+                "email": admin.email,
+                "role": "admin",
             }
 
         raise HTTPException(status_code=404, detail="User not found")

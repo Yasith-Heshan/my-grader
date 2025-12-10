@@ -1,5 +1,5 @@
 """
-User models: Teacher and Student
+User models: Teacher, Student, and Admin
 """
 
 from beanie import Document, Indexed
@@ -11,7 +11,6 @@ from datetime import datetime
 class Teacher(Document):
     name: str
     email: Indexed(EmailStr, unique=True)
-    # Optional password hash for authentication
     password_hash: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -30,7 +29,6 @@ class Teacher(Document):
 class Student(Document):
     name: str
     email: Indexed(EmailStr, unique=True)
-    # Optional password hash for authentication
     password_hash: Optional[str] = None
     student_number: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
@@ -55,7 +53,6 @@ class Student(Document):
 class Admin(Document):
     name: str
     email: Indexed(EmailStr, unique=True)
-    # Optional password hash for authentication
     password_hash: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -67,6 +64,5 @@ class Admin(Document):
 
     class Config:
         json_schema_extra = {
-            "example": {"name": "System Admin", "email": "admin@university.edu"}
+            "example": {"name": "Admin User", "email": "admin@university.edu"}
         }
-

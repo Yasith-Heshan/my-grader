@@ -14,7 +14,7 @@ async def connect_to_mongo():
     global mongodb_client
     
     # Import all models for Beanie initialization
-    from models import Assignment, TestCase, SingleCellTestCase, Submission, SubmissionItem, Teacher, Student
+    from models import Assignment, TestCase, SingleCellTestCase, Submission, SubmissionItem, Teacher, Student, Admin
     
     mongodb_client = AsyncIOMotorClient(settings.mongodb_url)
     database = mongodb_client[settings.database_name]
@@ -28,7 +28,8 @@ async def connect_to_mongo():
             Submission,
             SubmissionItem,
             Teacher,
-            Student
+            Student,
+            Admin
         ]
     )
     print(f"Connected to MongoDB: {settings.database_name}")
