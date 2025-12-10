@@ -21,10 +21,7 @@ async def seed_admins():
     # Connect to MongoDB
     client = AsyncIOMotorClient(settings.mongodb_url)
     db = client[settings.database_name]
-    await init_beanie(
-        database=db,
-        document_models=[Teacher, Student, Admin]
-    )
+    await init_beanie(database=db, document_models=[Teacher, Student, Admin])
     print(f"Connected to MongoDB")
 
     try:
@@ -67,4 +64,3 @@ async def seed_admins():
 
 if __name__ == "__main__":
     asyncio.run(seed_admins())
-

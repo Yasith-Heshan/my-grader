@@ -1,6 +1,7 @@
 """
 Database configuration and connection management for MongoDB
 """
+
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from typing import Optional
@@ -9,16 +10,26 @@ from config import settings
 # Global client instance
 mongodb_client: Optional[AsyncIOMotorClient] = None
 
+
 async def connect_to_mongo():
     """Connect to MongoDB and initialize Beanie"""
     global mongodb_client
-    
+
     # Import all models for Beanie initialization
-    from models import Assignment, TestCase, SingleCellTestCase, Submission, SubmissionItem, Teacher, Student, Admin
-    
+    from models import (
+        Assignment,
+        TestCase,
+        SingleCellTestCase,
+        Submission,
+        SubmissionItem,
+        Teacher,
+        Student,
+        Admin,
+    )
+
     mongodb_client = AsyncIOMotorClient(settings.mongodb_url)
     database = mongodb_client[settings.database_name]
-    
+
     await init_beanie(
         database=database,
         document_models=[
@@ -29,10 +40,11 @@ async def connect_to_mongo():
             SubmissionItem,
             Teacher,
             Student,
-            Admin
-        ]
+            Admin,
+        ],
     )
     print(f"Connected to MongoDB: {settings.database_name}")
+
 
 async def close_mongo_connection():
     """Close MongoDB connection"""

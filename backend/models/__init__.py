@@ -1,6 +1,7 @@
 """
 Database models package
 """
+
 from .assignment import Assignment
 from .test_case import TestCase, SingleCellTestCase
 from .submission import Submission, SubmissionItem, GradeStatus
@@ -15,5 +16,5 @@ __all__ = [
     "GradeStatus",
     "Teacher",
     "Student",
-    "Admin"
+    "Admin",
 ]

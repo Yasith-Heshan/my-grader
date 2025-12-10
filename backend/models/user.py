@@ -69,4 +69,3 @@ class Admin(Document):
         json_schema_extra = {
             "example": {"name": "System Admin", "email": "admin@university.edu"}
         }
-

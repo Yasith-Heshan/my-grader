@@ -21,19 +21,18 @@ async def list_admins(skip: int = 0, limit: int = 10) -> List[Admin]:
     return await Admin.find().skip(skip).limit(limit).to_list()
 
 
-async def create_teacher(name: str, email: str, password_hash: str, **kwargs) -> Teacher:
+async def create_teacher(
+    name: str, email: str, password_hash: str, **kwargs
+) -> Teacher:
     """Admin creates a teacher account"""
-    teacher = Teacher(
-        name=name,
-        email=email,
-        password_hash=password_hash,
-        **kwargs
-    )
+    teacher = Teacher(name=name, email=email, password_hash=password_hash, **kwargs)
     await teacher.insert()
     return teacher
 
 
-async def create_student(name: str, email: str, password_hash: str, student_number: str = None, **kwargs) -> Student:
+async def create_student(
+    name: str, email: str, password_hash: str, student_number: str = None, **kwargs
+) -> Student:
     """Admin creates a student account"""
     student = Student(
         name=name,
