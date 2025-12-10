@@ -12,7 +12,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
-    login: (email: string, password: string, role: 'teacher' | 'student') => Promise<void>;
+    login: (email: string, password: string) => Promise<User>;
     logout: () => void;
     isAuthenticated: boolean;
     initialized: boolean;
@@ -53,9 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         init();
     }, []);
 
-    const login = async (email: string, password: string, role: 'teacher' | 'student') => {
+    const login = async (email: string, password: string): Promise<User> => {
         try {
-            const resp = await userApi.login({ email, password, role });
+            const resp = await userApi.login({ email, password });
             const { user, token } = resp;
             setUser(user);
             setCurrentUser(user);
@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             // set axios default header for immediate authenticated requests
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
             setInitialized(true);
+            return user;
         } catch (err) {
             throw err;
         }

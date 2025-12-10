@@ -14,12 +14,13 @@ const LoginPage: React.FC = () => {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async (values: { email: string; password: string; role: 'teacher' | 'student' }) => {
+    const handleLogin = async (values: { email: string; password: string }) => {
         setLoading(true);
         try {
-            await login(values.email, values.password, values.role);
+            const loggedInUser = await login(values.email, values.password);
             setLoading(false);
-            if (values.role === 'teacher') navigate('/teacher');
+            // Redirect based on role
+            if (loggedInUser.role === 'teacher') navigate('/teacher');
             else navigate('/student');
         } catch (err: any) {
             setLoading(false);
@@ -51,7 +52,6 @@ const LoginPage: React.FC = () => {
                         form={form}
                         onFinish={handleLogin}
                         layout="vertical"
-                        initialValues={{ role: 'teacher' }}
                         size="large"
                     >
                         <Form.Item
@@ -79,16 +79,7 @@ const LoginPage: React.FC = () => {
                             />
                         </Form.Item>
 
-                        <Form.Item
-                            name="role"
-                            label="Login as"
-                            rules={[{ required: true }]}
-                        >
-                            <Radio.Group>
-                                <Radio.Button value="teacher">Teacher</Radio.Button>
-                                <Radio.Button value="student">Student</Radio.Button>
-                            </Radio.Group>
-                        </Form.Item>
+                        {/* Role no longer required — backend derives from account */}
 
                         <Form.Item style={{ marginBottom: 0 }}>
                             <Button
