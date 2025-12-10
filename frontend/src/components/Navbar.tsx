@@ -30,6 +30,11 @@ const Navbar: React.FC = () => {
       icon: <HomeOutlined />,
       label: <Link to="/teacher">Dashboard</Link>,
     },
+    {
+      key: '/users',
+      icon: <UserOutlined />,
+      label: <Link to="/users">Users</Link>,
+    },
   ];
 
   const studentMenuItems = [

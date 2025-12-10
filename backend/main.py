@@ -2,6 +2,9 @@
 FastAPI Application Entry Point
 """
 
+import os
+import sys
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -9,9 +12,16 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 import traceback
 
-from routers import teacher, student
-from routers import auth
-from database import connect_to_mongo, close_mongo_connection
+# Imports work both when run directly (python main.py) and as module (python -m uvicorn backend.main:app)
+try:
+    # Try backend-qualified imports first (when running as module from repo root)
+    from backend.routers import teacher, student, auth
+    from backend.database import connect_to_mongo, close_mongo_connection
+except ModuleNotFoundError:
+    # Fall back to relative imports when running directly from backend folder
+    sys.path.insert(0, os.path.dirname(__file__))
+    from routers import teacher, student, auth
+    from database import connect_to_mongo, close_mongo_connection
 
 
 @asynccontextmanager

@@ -3,16 +3,21 @@ from datetime import datetime, timedelta
 import jwt
 from typing import Optional
 from config import settings
+import hashlib
 
 # Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use PBKDF2 (pbkdf2_sha256) to avoid bcrypt C-extension issues and the 72-byte limit.
+# Support both pbkdf2_sha256 (default for new hashes) and bcrypt (existing hashes)
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
+    """Hash a password using PBKDF2-SHA256."""
     return pwd_context.hash(password)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain password against a hashed password."""
     return pwd_context.verify(plain_password, hashed_password)
 
 

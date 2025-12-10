@@ -7,6 +7,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { AuthProvider } from './context/AuthContext';
 import store from './store';
 import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import UserManagement from './pages/UserManagement';
 import TeacherDashboard from './pages/TeacherDashboard';
 import StudentDashboard from './pages/StudentDashboard';
 import AssignmentDetail from './pages/AssignmentDetail';
@@ -31,6 +33,7 @@ const AppContent: React.FC = () => {
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected Teacher Routes */}
         <Route
@@ -74,6 +77,16 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute>
               <NotebookPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* User management - teachers only */}
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <UserManagement />
             </ProtectedRoute>
           }
         />

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Card, Form, Input, Button, Radio, Typography, Space } from 'antd';
 import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -12,21 +14,17 @@ const LoginPage: React.FC = () => {
     const { login } = useAuth();
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = (values: { email: string; password: string; role: 'teacher' | 'student' }) => {
+    const handleLogin = async (values: { email: string; password: string; role: 'teacher' | 'student' }) => {
         setLoading(true);
-
-        // Simulate API call delay
-        setTimeout(() => {
-            login(values.email, values.password, values.role);
+        try {
+            await login(values.email, values.password, values.role);
             setLoading(false);
-
-            // Navigate based on role
-            if (values.role === 'teacher') {
-                navigate('/teacher');
-            } else {
-                navigate('/student');
-            }
-        }, 500);
+            if (values.role === 'teacher') navigate('/teacher');
+            else navigate('/student');
+        } catch (err: any) {
+            setLoading(false);
+            toast.error(err.response?.data?.detail || err.message || 'Login failed');
+        }
     };
 
     return (
@@ -105,10 +103,11 @@ const LoginPage: React.FC = () => {
                         </Form.Item>
                     </Form>
 
-                    <div style={{ marginTop: 16 }}>
+                    <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                            Demo Mode: No backend validation required
+                            Don't have an account?
                         </Text>
+                        <Link to="/register">Create account</Link>
                     </div>
                 </Space>
             </Card>

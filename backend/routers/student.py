@@ -60,6 +60,16 @@ async def get_student(student_id: str):
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get student: {str(e)}")
 
+
+@router.get("/students", response_model=List[StudentResponse])
+async def list_students_endpoint(skip: int = 0, limit: int = 100):
+    """List all students"""
+    try:
+        students = await student_service.list_students(skip, limit)
+        return serialize_documents(students)
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to list students: {str(e)}")
+
 # Assignment Browsing
 @router.get("/assignments", response_model=List[AssignmentResponse])
 async def list_available_assignments(

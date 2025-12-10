@@ -38,6 +38,18 @@ export const userApi = {
     return response.data;
   },
 
+  // List teachers
+  getTeachers: async (): Promise<User[]> => {
+    const response = await axiosInstance.get('/api/teacher/teachers');
+    return response.data;
+  },
+
+  // List students
+  getStudents: async (): Promise<User[]> => {
+    const response = await axiosInstance.get('/api/student/students');
+    return response.data;
+  },
+
   // Logout
   logout: async (): Promise<void> => {
     await axiosInstance.post('/api/auth/logout');

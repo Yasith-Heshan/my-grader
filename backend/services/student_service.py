@@ -28,3 +28,8 @@ async def get_student(student_id: str) -> Optional[Student]:
 async def get_student_by_email(email: str) -> Optional[Student]:
     """Get student by email"""
     return await Student.find_one(Student.email == email)
+
+
+async def list_students(skip: int = 0, limit: int = 100):
+    """List students with pagination"""
+    return await Student.find().skip(skip).limit(limit).to_list()

@@ -29,6 +29,11 @@ async def get_teacher_by_email(email: str) -> Optional[Teacher]:
     """Get teacher by email"""
     return await Teacher.find_one(Teacher.email == email)
 
+
+async def list_teachers(skip: int = 0, limit: int = 100):
+    """List teachers with pagination"""
+    return await Teacher.find().skip(skip).limit(limit).to_list()
+
 async def create_single_cell_testcase(testcase_data: SingleCellTestCaseCreate) -> SingleCellTestCase:
     """
     Create a new single-cell testcase function for evaluating student submissions
