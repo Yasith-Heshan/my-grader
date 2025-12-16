@@ -1,7 +1,7 @@
 """
 Teacher API routes
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Optional
 from beanie import PydanticObjectId, Document
 
@@ -12,6 +12,8 @@ from schemas import (
 )
 from schemas.test_case import SingleCellTestCaseCreate, SingleCellTestCaseResponse
 from services import assignment_service, grader_service, teacher_service
+from middleware.auth import get_current_teacher
+from models import Teacher
 
 router = APIRouter()
 
@@ -78,7 +80,10 @@ async def get_all_assignments():
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get assignments: {str(e)}")
 
 @router.post("/assignments", response_model=AssignmentResponse, status_code=status.HTTP_201_CREATED)
-async def create_assignment(assignment: AssignmentCreate):
+async def create_assignment(
+    assignment: AssignmentCreate,
+    teacher: Teacher = Depends(get_current_teacher)
+):
     """Create a new assignment"""
     try:
         result = await assignment_service.create_assignment(assignment)
@@ -126,7 +131,10 @@ async def list_assignments(
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to list assignments: {str(e)}")
 
 @router.delete("/assignments/{assignment_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_assignment(assignment_id: str):
+async def delete_assignment(
+    assignment_id: str,
+    teacher: Teacher = Depends(get_current_teacher)
+):
     """Delete an assignment"""
     try:
         await assignment_service.delete_assignment(assignment_id)
@@ -172,7 +180,10 @@ async def get_questions(assignment_id: str):
 
 # Grading
 @router.post("/submissions/{submission_id}/grade", response_model=dict)
-async def grade_submission(submission_id: str):
+async def grade_submission(
+    submission_id: str,
+    teacher: Teacher = Depends(get_current_teacher)
+):
     """Grade a single submission"""
     try:
         result = await grader_service.grade_submission(submission_id)

@@ -25,11 +25,11 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(subject: str, role: str, expires_delta: Optional[timedelta] = None) -> str:
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.jwt_expiration_minutes)
     expire = datetime.utcnow() + expires_delta
-    to_encode = {"sub": subject, "exp": expire}
+    to_encode = {"sub": subject, "role": role, "exp": expire}
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 

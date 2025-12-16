@@ -10,6 +10,7 @@ from utils.security import (
     create_access_token,
     decode_access_token,
 )
+from middleware.auth import get_current_user
 from config import settings
 
 router = APIRouter()
@@ -43,7 +44,7 @@ async def register(payload: RegisterRequest):
             password_hash=hash_password(payload.password),
         )
         await teacher.insert()
-        token = create_access_token(subject=str(teacher.id))
+        token = create_access_token(subject=str(teacher.id), role="teacher")
         return {
             "user": {
                 "id": str(teacher.id),
@@ -66,7 +67,7 @@ async def register(payload: RegisterRequest):
             password_hash=hash_password(payload.password),
         )
         await student.insert()
-        token = create_access_token(subject=str(student.id))
+        token = create_access_token(subject=str(student.id), role="student")
         return {
             "user": {
                 "id": str(student.id),
@@ -88,7 +89,7 @@ async def register(payload: RegisterRequest):
             password_hash=hash_password(payload.password),
         )
         await admin.insert()
-        token = create_access_token(subject=str(admin.id))
+        token = create_access_token(subject=str(admin.id), role="admin")
         return {
             "user": {
                 "id": str(admin.id),
@@ -111,7 +112,7 @@ async def login(payload: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not verify_password(payload.password, teacher.password_hash):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        token = create_access_token(subject=str(teacher.id))
+        token = create_access_token(subject=str(teacher.id), role="teacher")
         return {
             "user": {
                 "id": str(teacher.id),
@@ -128,7 +129,7 @@ async def login(payload: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not verify_password(payload.password, student.password_hash):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        token = create_access_token(subject=str(student.id))
+        token = create_access_token(subject=str(student.id), role="student")
         return {
             "user": {
                 "id": str(student.id),
@@ -145,7 +146,7 @@ async def login(payload: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not verify_password(payload.password, admin.password_hash):
             raise HTTPException(status_code=401, detail="Invalid credentials")
-        token = create_access_token(subject=str(admin.id))
+        token = create_access_token(subject=str(admin.id), role="admin")
         return {
             "user": {
                 "id": str(admin.id),
@@ -163,7 +164,7 @@ async def login(payload: LoginRequest):
         and teacher.password_hash
         and verify_password(payload.password, teacher.password_hash)
     ):
-        token = create_access_token(subject=str(teacher.id))
+        token = create_access_token(subject=str(teacher.id), role="teacher")
         return {
             "user": {
                 "id": str(teacher.id),
@@ -180,7 +181,7 @@ async def login(payload: LoginRequest):
         and student.password_hash
         and verify_password(payload.password, student.password_hash)
     ):
-        token = create_access_token(subject=str(student.id))
+        token = create_access_token(subject=str(student.id), role="student")
         return {
             "user": {
                 "id": str(student.id),
@@ -197,7 +198,7 @@ async def login(payload: LoginRequest):
         and admin.password_hash
         and verify_password(payload.password, admin.password_hash)
     ):
-        token = create_access_token(subject=str(admin.id))
+        token = create_access_token(subject=str(admin.id), role="admin")
         return {
             "user": {
                 "id": str(admin.id),
@@ -212,65 +213,53 @@ async def login(payload: LoginRequest):
 
 
 @router.get("/me")
-async def me(request: Request):
-    auth = request.headers.get("authorization")
-    if not auth:
-        raise HTTPException(status_code=401, detail="Missing authorization header")
-    parts = auth.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-    token = parts[1]
+async def me(current_user: dict = Depends(get_current_user)):
+    """Get current authenticated user information"""
+    user_id = current_user["id"]
+    role = current_user["role"]
+    
     try:
-        payload = decode_access_token(token)
-        sub = payload.get("sub")
-        if not sub:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        # Try teacher then student
-        try:
-            teacher = await teacher_service.get_teacher(sub)
-        except Exception:
-            teacher = None
-
-        if teacher:
-            return {
-                "id": str(teacher.id),
-                "name": teacher.name,
-                "email": teacher.email,
-                "role": "teacher",
-            }
-
-        try:
-            student = await student_service.get_student(sub)
-        except Exception:
-            student = None
-
-        if student:
-            return {
-                "id": str(student.id),
-                "name": student.name,
-                "email": student.email,
-                "role": "student",
-            }
-
-        try:
-            admin = await admin_service.get_admin(sub)
-        except Exception:
-            admin = None
-
-        if admin:
-            return {
-                "id": str(admin.id),
-                "name": admin.name,
-                "email": admin.email,
-                "role": "admin",
-            }
-
-        raise HTTPException(status_code=404, detail="User not found")
+        if role == "teacher":
+            user = await teacher_service.get_teacher(user_id)
+            if user:
+                return {
+                    "id": str(user.id),
+                    "name": user.name,
+                    "email": user.email,
+                    "role": "teacher",
+                }
+        
+        elif role == "student":
+            user = await student_service.get_student(user_id)
+            if user:
+                return {
+                    "id": str(user.id),
+                    "name": user.name,
+                    "email": user.email,
+                    "role": "student",
+                }
+        
+        elif role == "admin":
+            user = await admin_service.get_admin(user_id)
+            if user:
+                return {
+                    "id": str(user.id),
+                    "name": user.name,
+                    "email": user.email,
+                    "role": "admin",
+                }
+        
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching user: {str(e)}"
+        )
 
 
 @router.post("/logout")

@@ -1,7 +1,7 @@
 """
 Student API routes
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from typing import List, Optional
 from beanie import Document
 
@@ -12,6 +12,8 @@ from schemas import (
 )
 from schemas.test_case import CellEvaluationRequest, CellEvaluationResponse
 from services import submission_service, student_service, assignment_service, grader_service
+from middleware.auth import get_current_student, RoleChecker
+from models import Student
 
 router = APIRouter()
 

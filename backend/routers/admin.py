@@ -8,12 +8,8 @@ from typing import Optional, List
 
 from services import admin_service, teacher_service, student_service, submission_service
 from models import Admin
-from utils.security import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    decode_access_token,
-)
+from utils.security import hash_password
+from middleware.auth import get_current_admin
 
 router = APIRouter()
 
@@ -36,37 +32,9 @@ class GradeSubmissionRequest(BaseModel):
     feedback: Optional[str] = None
 
 
-# Helper to extract and validate admin token
-async def get_admin_from_token(request: Request):
-    """Extract admin ID from bearer token"""
-    auth = request.headers.get("authorization")
-    if not auth:
-        raise HTTPException(status_code=401, detail="Missing authorization header")
-
-    parts = auth.split()
-    if len(parts) != 2 or parts[0].lower() != "bearer":
-        raise HTTPException(status_code=401, detail="Invalid authorization header")
-
-    token = parts[1]
-    try:
-        payload = decode_access_token(token)
-        admin_id = payload.get("sub")
-        if not admin_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
-
-        admin = await admin_service.get_admin(admin_id)
-        if not admin:
-            raise HTTPException(status_code=401, detail="Admin not found")
-        return admin
-    except HTTPException:
-        raise
-    except Exception:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
-
-
 @router.post("/create-teacher", status_code=status.HTTP_201_CREATED)
 async def create_teacher(
-    payload: CreateTeacherRequest, admin: Admin = Depends(get_admin_from_token)
+    payload: CreateTeacherRequest, admin: Admin = Depends(get_current_admin)
 ):
     """Admin creates a new teacher account"""
     existing = await teacher_service.get_teacher_by_email(payload.email)
@@ -89,7 +57,7 @@ async def create_teacher(
 
 @router.post("/create-student", status_code=status.HTTP_201_CREATED)
 async def create_student(
-    payload: CreateStudentRequest, admin: Admin = Depends(get_admin_from_token)
+    payload: CreateStudentRequest, admin: Admin = Depends(get_current_admin)
 ):
     """Admin creates a new student account"""
     existing = await student_service.get_student_by_email(payload.email)
@@ -113,14 +81,14 @@ async def create_student(
 
 
 @router.get("/submissions")
-async def get_all_submissions(admin: Admin = Depends(get_admin_from_token)):
+async def get_all_submissions(admin: Admin = Depends(get_current_admin)):
     """Admin views all student submissions"""
     submissions = await submission_service.get_submissions(skip=0, limit=1000)
     return submissions
 
 
 @router.get("/assignments/all")
-async def get_all_assignments(admin: Admin = Depends(get_admin_from_token)):
+async def get_all_assignments(admin: Admin = Depends(get_current_admin)):
     """Admin views all assignments with details"""
     # Fetch all assignments (implementation depends on your submission_service)
     # For now, return a placeholder that can be extended
@@ -128,7 +96,7 @@ async def get_all_assignments(admin: Admin = Depends(get_admin_from_token)):
 
 
 @router.get("/students")
-async def get_all_students(admin: Admin = Depends(get_admin_from_token)):
+async def get_all_students(admin: Admin = Depends(get_current_admin)):
     """Admin views all students"""
     students = await student_service.list_students(skip=0, limit=1000)
     return [
@@ -143,7 +111,7 @@ async def get_all_students(admin: Admin = Depends(get_admin_from_token)):
 
 
 @router.get("/teachers")
-async def get_all_teachers(admin: Admin = Depends(get_admin_from_token)):
+async def get_all_teachers(admin: Admin = Depends(get_current_admin)):
     """Admin views all teachers"""
     teachers = await teacher_service.list_teachers(skip=0, limit=1000)
     return [{"id": str(t.id), "name": t.name, "email": t.email} for t in teachers]
