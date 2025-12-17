@@ -1,0 +1,150 @@
+{
+  "assignments": [
+    {
+      "title": "Python Math Functions - Circle and Sphere",
+      "description": "# Mathematical Functions Assignment\n\nIn this assignment, you'll implement functions to calculate geometric properties.\n\n## Formulas You'll Need\n\n### Circle Area\nThe area of a circle with radius $r$ is:\n$$A_{circle} = \\pi r^2$$\n\n### Sphere Volume\nThe volume of a sphere with radius $r$ is:\n$$V_{sphere} = \\frac{4}{3}\\pi r^3$$\n\n### Sphere Surface Area\n$$A_{sphere} = 4\\pi r^2$$\n\n## Requirements\n- Use $\\pi \\approx 3.14159$\n- Round results to 2 decimal places\n- Handle edge cases where $r \\leq 0$",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Calculate Circle Area",
+          "description": "Write a function `circle_area(radius)` that calculates the area of a circle.\n\n**Formula:** $A = \\pi r^2$\n\n**Example:**\n- Input: `r = 5`\n- Output: `78.54`\n\n**Constraints:**\n- Return `0` if $r \\leq 0$",
+          "cell_id": "cell_1",
+          "points": 10,
+          "starter_code": "def circle_area(radius):\n    # Write your code here\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Calculate Sphere Volume",
+          "description": "Write a function `sphere_volume(radius)` that calculates the volume.\n\n**Formula:** $$V = \\frac{4}{3}\\pi r^3$$\n\n**Example:**\n- Input: `r = 3`\n- Output: `113.10`",
+          "cell_id": "cell_2",
+          "points": 15,
+          "starter_code": "def sphere_volume(radius):\n    # Write your code here\n    pass\n"
+        }
+      ]
+    },
+    {
+      "title": "Calculus Functions - Derivatives and Integrals",
+      "description": "# Calculus Assignment\n\n## Overview\nImplement numerical methods for calculus operations.\n\n## Background\n\n### Derivative Definition\nThe derivative of a function $f(x)$ at point $x$ is:\n$$f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}$$\n\n### Definite Integral\nThe definite integral from $a$ to $b$:\n$$\\int_a^b f(x) dx$$\n\n### Power Rule\nFor $f(x) = x^n$:\n$$\\frac{d}{dx}[x^n] = nx^{n-1}$$\n\n## Task\nImplement numerical approximations using the formulas above.",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Numerical Derivative",
+          "description": "Implement `derivative(f, x, h=0.0001)` using the difference quotient.\n\n**Formula:**\n$$f'(x) \\approx \\frac{f(x+h) - f(x)}{h}$$\n\nwhere $h$ is a small value (default: $0.0001$)\n\n**Example:**\nFor $f(x) = x^2$ at $x = 3$:\n- Expected: $f'(3) = 6$",
+          "cell_id": "cell_1",
+          "points": 15,
+          "starter_code": "def derivative(f, x, h=0.0001):\n    # Implement the difference quotient\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Trapezoidal Rule Integration",
+          "description": "Implement `integrate(f, a, b, n=1000)` using the trapezoidal rule.\n\n**Formula:**\n$$\\int_a^b f(x) dx \\approx \\frac{b-a}{2n} \\sum_{i=0}^{n-1} [f(x_i) + f(x_{i+1})]$$\n\nwhere $x_i = a + i\\cdot\\frac{b-a}{n}$\n\n**Example:**\nFor $\\int_0^1 x^2 dx$:\n- Expected: $\\frac{1}{3} \\approx 0.333$",
+          "cell_id": "cell_2",
+          "points": 20,
+          "starter_code": "def integrate(f, a, b, n=1000):\n    # Implement trapezoidal rule\n    pass\n"
+        }
+      ]
+    },
+    {
+      "title": "Linear Algebra - Matrix Operations",
+      "description": "# Matrix Operations Assignment\n\n## Matrix Basics\n\n### Matrix Multiplication\nFor matrices $A$ (size $m \\times n$) and $B$ (size $n \\times p$):\n$$(AB)_{ij} = \\sum_{k=1}^{n} A_{ik} B_{kj}$$\n\n### Example\n$$A = \\begin{pmatrix} 1 & 2 \\\\ 3 & 4 \\end{pmatrix}, \\quad B = \\begin{pmatrix} 5 & 6 \\\\ 7 & 8 \\end{pmatrix}$$\n\n$$AB = \\begin{pmatrix} 19 & 22 \\\\ 43 & 50 \\end{pmatrix}$$\n\n### Determinant (2×2)\nFor a $2 \\times 2$ matrix:\n$$\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$$\n\n## Implementation\nImplement these operations using Python lists.",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Matrix Multiplication",
+          "description": "Implement `matrix_multiply(A, B)` for $2 \\times 2$ matrices.\n\n**Formula:**\n$$(AB)_{ij} = \\sum_{k=1}^{2} A_{ik} B_{kj}$$\n\n**Input format:**\n```python\nA = [[1, 2], [3, 4]]\nB = [[5, 6], [7, 8]]\n```\n\n**Expected output:**\n```python\n[[19, 22], [43, 50]]\n```",
+          "cell_id": "cell_1",
+          "points": 15,
+          "starter_code": "def matrix_multiply(A, B):\n    # Implement 2x2 matrix multiplication\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Matrix Determinant",
+          "description": "Implement `determinant_2x2(matrix)` for a $2 \\times 2$ matrix.\n\n**Formula:**\n$$\\det\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} = ad - bc$$\n\n**Example:**\n- Input: `[[1, 2], [3, 4]]`\n- Output: $1 \\cdot 4 - 2 \\cdot 3 = -2$",
+          "cell_id": "cell_2",
+          "points": 10,
+          "starter_code": "def determinant_2x2(matrix):\n    # Calculate determinant\n    pass\n"
+        }
+      ]
+    },
+    {
+      "title": "Statistics - Mean, Variance, and Standard Deviation",
+      "description": "# Statistical Measures\n\n## Formulas\n\n### Mean (Average)\nFor a dataset $x_1, x_2, ..., x_n$:\n$$\\mu = \\bar{x} = \\frac{1}{n} \\sum_{i=1}^{n} x_i$$\n\n### Variance\nMeasure of spread:\n$$\\sigma^2 = \\frac{1}{n} \\sum_{i=1}^{n} (x_i - \\mu)^2$$\n\n### Standard Deviation\nSquare root of variance:\n$$\\sigma = \\sqrt{\\sigma^2} = \\sqrt{\\frac{1}{n} \\sum_{i=1}^{n} (x_i - \\mu)^2}$$\n\n## Notes\n- $\\mu$ (mu) represents the mean\n- $\\sigma$ (sigma) represents standard deviation\n- $\\sigma^2$ represents variance\n- Use population formulas (divide by $n$, not $n-1$)",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Calculate Mean",
+          "description": "Implement `calculate_mean(data)` to compute the average.\n\n**Formula:**\n$$\\mu = \\frac{1}{n} \\sum_{i=1}^{n} x_i$$\n\n**Example:**\n- Input: `[2, 4, 6, 8, 10]`\n- Output: `6.0`\n\n**Edge cases:**\n- Return `0` for empty list",
+          "cell_id": "cell_1",
+          "points": 10,
+          "starter_code": "def calculate_mean(data):\n    # Calculate the mean\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Calculate Variance",
+          "description": "Implement `calculate_variance(data)` to measure spread.\n\n**Steps:**\n1. Calculate mean: $\\mu$\n2. Calculate variance: $\\sigma^2 = \\frac{1}{n} \\sum_{i=1}^{n} (x_i - \\mu)^2$\n\n**Example:**\n- Input: `[2, 4, 6, 8, 10]`\n- Mean: $\\mu = 6$\n- Variance: $\\sigma^2 = 8.0$",
+          "cell_id": "cell_2",
+          "points": 15,
+          "starter_code": "def calculate_variance(data):\n    # Calculate the variance\n    pass\n"
+        },
+        {
+          "question_number": 3,
+          "title": "Calculate Standard Deviation",
+          "description": "Implement `calculate_std(data)` using variance.\n\n**Formula:**\n$$\\sigma = \\sqrt{\\sigma^2}$$\n\n**Hint:** Use your variance function!\n\n**Example:**\n- Input: `[2, 4, 6, 8, 10]`\n- Variance: $8.0$\n- Std Dev: $\\sigma = \\sqrt{8} \\approx 2.83$",
+          "cell_id": "cell_3",
+          "points": 10,
+          "starter_code": "import math\n\ndef calculate_std(data):\n    # Calculate standard deviation\n    pass\n"
+        }
+      ]
+    },
+    {
+      "title": "Physics - Kinematics Equations",
+      "description": "# Kinematics Assignment\n\n## Motion Equations\n\n### Velocity\nVelocity is the rate of change of position:\n$$v = \\frac{dx}{dt}$$\n\nFor constant acceleration:\n$$v = v_0 + at$$\n\nwhere:\n- $v$ = final velocity\n- $v_0$ = initial velocity  \n- $a$ = acceleration\n- $t$ = time\n\n### Position with Constant Acceleration\n$$x = x_0 + v_0 t + \\frac{1}{2}at^2$$\n\nwhere $x_0$ is initial position\n\n### Velocity-Displacement Equation\n$$v^2 = v_0^2 + 2a(x - x_0)$$\n\n## Constants\n- Gravity: $g = 9.8 \\text{ m/s}^2$ (downward)\n- Use SI units (meters, seconds)",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Final Velocity",
+          "description": "Calculate final velocity using $v = v_0 + at$\n\n**Parameters:**\n- `v0`: initial velocity (m/s)\n- `a`: acceleration (m/s²)\n- `t`: time (s)\n\n**Example:**\nA car accelerates from rest at $2 \\text{ m/s}^2$ for $5 \\text{ s}$:\n- $v_0 = 0$, $a = 2$, $t = 5$\n- $v = 0 + 2(5) = 10 \\text{ m/s}$",
+          "cell_id": "cell_1",
+          "points": 10,
+          "starter_code": "def final_velocity(v0, a, t):\n    # Calculate v = v0 + at\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Position with Acceleration",
+          "description": "Calculate position using:\n$$x = x_0 + v_0 t + \\frac{1}{2}at^2$$\n\n**Parameters:**\n- `x0`: initial position (m)\n- `v0`: initial velocity (m/s)\n- `a`: acceleration (m/s²)\n- `t`: time (s)\n\n**Example - Free Fall:**\nDrop object from $h = 100 \\text{ m}$:\n- $x_0 = 100$, $v_0 = 0$, $a = -9.8$, $t = 2$\n- $x = 100 + 0(2) + \\frac{1}{2}(-9.8)(2)^2 = 80.4 \\text{ m}$",
+          "cell_id": "cell_2",
+          "points": 15,
+          "starter_code": "def position(x0, v0, a, t):\n    # Calculate position\n    pass\n"
+        }
+      ]
+    },
+    {
+      "title": "Quadratic Equations and Roots",
+      "description": "# Solving Quadratic Equations\n\n## Standard Form\n$$ax^2 + bx + c = 0$$\n\nwhere $a \\neq 0$\n\n## Quadratic Formula\nThe solutions are:\n$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$\n\n## Discriminant\nThe discriminant $\\Delta$ determines the nature of roots:\n$$\\Delta = b^2 - 4ac$$\n\n### Cases:\n- $\\Delta > 0$: Two distinct real roots\n- $\\Delta = 0$: One repeated real root  \n- $\\Delta < 0$: Two complex conjugate roots\n\n## Examples\n\n### Example 1: $x^2 - 5x + 6 = 0$\n- $a=1, b=-5, c=6$\n- $\\Delta = 25 - 24 = 1 > 0$\n- Roots: $x = 2$ and $x = 3$\n\n### Example 2: $x^2 - 4x + 4 = 0$  \n- $\\Delta = 16 - 16 = 0$\n- Root: $x = 2$ (repeated)",
+      "due_date": "2025-12-31T23:59:59",
+      "questions": [
+        {
+          "question_number": 1,
+          "title": "Calculate Discriminant",
+          "description": "Implement `discriminant(a, b, c)` to calculate $\\Delta$.\n\n**Formula:**\n$$\\Delta = b^2 - 4ac$$\n\n**Example:**\n- Input: `a=1, b=-5, c=6`\n- Output: $(-5)^2 - 4(1)(6) = 25 - 24 = 1$",
+          "cell_id": "cell_1",
+          "points": 10,
+          "starter_code": "def discriminant(a, b, c):\n    # Calculate discriminant\n    pass\n"
+        },
+        {
+          "question_number": 2,
+          "title": "Solve Quadratic Equation",
+          "description": "Implement `solve_quadratic(a, b, c)` returning both roots.\n\n**Formula:**\n$$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$\n\n**Return format:**\n- Tuple of two roots: `(x1, x2)`\n- If $\\Delta < 0$, return `None`\n- Order: $x_1 \\leq x_2$\n\n**Example:**\n- Input: `a=1, b=-5, c=6`  \n- Output: `(2.0, 3.0)`\n\n**Hint:** Use `math.sqrt()` for the square root.",
+          "cell_id": "cell_2",
+          "points": 20,
+          "starter_code": "import math\n\ndef solve_quadratic(a, b, c):\n    # Solve using quadratic formula\n    pass\n"
+        }
+      ]
+    }
+  ]
+}

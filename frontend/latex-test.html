@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Rendering Test</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .example {
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #1890ff;
+        }
+        h1 { color: #1890ff; }
+        h2 { color: #333; margin-top: 30px; }
+        code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .preview {
+            background: white;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+    <h1>🎓 LaTeX Math Rendering Test</h1>
+    <p>This page demonstrates LaTeX math rendering that teachers can use in assignment descriptions.</p>
+
+    <div class="example">
+        <h2>Example 1: Inline Math</h2>
+        <p><strong>Markdown:</strong> <code>The area of a circle is $A = \pi r^2$</code></p>
+        <div class="preview">
+            The area of a circle is $A = \pi r^2$
+        </div>
+    </div>
+
+    <div class="example">
+        <h2>Example 2: Display Math</h2>
+        <p><strong>Markdown:</strong> <code>$$x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$$</code></p>
+        <div class="preview">
+            $$x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$$
+        </div>
+    </div>
+
+    <div class="example">
+        <h2>Example 3: Complex Assignment Description</h2>
+        <p><strong>Full example with markdown and math:</strong></p>
+        <div class="preview">
+            <h3>Python Functions Assignment</h3>
+            <p>Write a function to calculate the <strong>area of a circle</strong> with radius $r$.</p>
+            <p>The formula is:</p>
+            $$A = \pi r^2$$
+            <p>where:</p>
+            <ul>
+                <li>$A$ is the area</li>
+                <li>$r$ is the radius</li>
+                <li>$\pi \approx 3.14159$</li>
+            </ul>
+            <p><strong>Requirements:</strong></p>
+            <ol>
+                <li>Return result rounded to 2 decimal places</li>
+                <li>Handle case when $r \leq 0$</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="example">
+        <h2>Example 4: Calculus</h2>
+        <p><strong>Integrals and derivatives:</strong></p>
+        <div class="preview">
+            <p>Find the derivative: $\frac{d}{dx}[x^3] = 3x^2$</p>
+            <p>Evaluate the integral:</p>
+            $$\int_0^1 x^2 dx = \frac{1}{3}$$
+            <p>Calculate the limit:</p>
+            $$\lim_{x \to 0} \frac{\sin(x)}{x} = 1$$
+        </div>
+    </div>
+
+    <div class="example">
+        <h2>Example 5: Greek Letters</h2>
+        <p><strong>Common in math and science:</strong></p>
+        <div class="preview">
+            <p>Angles: $\alpha$, $\beta$, $\gamma$, $\theta$</p>
+            <p>Statistics: $\mu$ (mean), $\sigma$ (standard deviation)</p>
+            <p>Physics: $\lambda$ (wavelength), $\omega$ (angular velocity)</p>
+        </div>
+    </div>
+
+    <div class="example">
+        <h2>Example 6: Matrices</h2>
+        <p><strong>Linear algebra:</strong></p>
+        <div class="preview">
+            <p>Calculate the product of matrices:</p>
+            $$\begin{pmatrix} 1 & 2 \\ 3 & 4 \end{pmatrix} \begin{pmatrix} 5 & 6 \\ 7 & 8 \end{pmatrix} = \begin{pmatrix} 19 & 22 \\ 43 & 50 \end{pmatrix}$$
+        </div>
+    </div>
+
+    <div style="margin-top: 40px; padding: 20px; background: #e6f7ff; border-radius: 8px;">
+        <h2>✅ Implementation Status</h2>
+        <p>The LaTeX rendering is working! All the math expressions above are rendered using KaTeX.</p>
+        <p><strong>Your React components will have the same rendering quality.</strong></p>
+        <ul>
+            <li>✅ DescriptionViewer component created</li>
+            <li>✅ AssignmentFormWithPreview component created</li>
+            <li>✅ QuestionFormWithPreview component created</li>
+            <li>✅ Dependencies installed (katex, remark-math, rehype-katex)</li>
+            <li>✅ Demo page created</li>
+            <li>✅ Documentation written</li>
+        </ul>
+        <p><strong>Next step:</strong> Use the enhanced form components in your application!</p>
+    </div>
+
+    <script>
+        // Render all math expressions on the page
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "$", right: "$", display: false}
+                ],
+                throwOnError: false
+            });
+        });
+    </script>
+</body>
+</html>

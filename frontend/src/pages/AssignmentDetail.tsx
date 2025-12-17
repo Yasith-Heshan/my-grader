@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
 import { Layout, Card, Button, Typography, Space, Tag, Divider, Alert, Spin, Modal, Table } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarOutlined, SendOutlined, CheckCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
-import ReactMarkdown from 'react-markdown';
+import { CalendarOutlined, SendOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import { useAssignment } from '../hooks/useAssignments';
+import DescriptionViewer from '../components/DescriptionViewer';
 import { useCreateSubmission } from '../hooks/useSubmissions';
 import CodeEditor from '../components/CodeEditor';
 import axiosInstance from '../api/axiosInstance';
 import { toast } from 'react-toastify';
 
 const { Content } = Layout;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface TestResult {
   testcase_name: string;
@@ -123,7 +123,7 @@ const AssignmentDetail: React.FC = () => {
             borderRadius: '8px',
             marginBottom: '24px',
           }}>
-            <ReactMarkdown>{assignment.description}</ReactMarkdown>
+            <DescriptionViewer content={assignment.description} />
           </div>
 
           <Divider />

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAssignments, useDeleteAssignment, useCreateAssignment } from '../hooks/useAssignments';
 import { useSubmissions, useGradeSubmission } from '../hooks/useSubmissions';
-import AssignmentForm from '../components/AssignmentForm';
+import AssignmentFormWithPreview from '../components/AssignmentFormWithPreview';
 import SubmissionList from '../components/SubmissionList';
 import ResultChart from '../components/ResultChart';
 import TestCaseManager from '../components/TestCaseManager';
@@ -184,9 +184,9 @@ const TeacherDashboard: React.FC = () => {
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={800}
+        width={900}
       >
-        <AssignmentForm
+        <AssignmentFormWithPreview
           onSubmit={handleCreateAssignment}
           loading={createMutation.isPending}
         />

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { CalendarOutlined, SendOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import { useAssignment } from '../hooks/useAssignments';
+import DescriptionViewer from '../components/DescriptionViewer';
 import { useCreateSubmission } from '../hooks/useSubmissions';
 import CodeEditor from '../components/CodeEditor';
 import axiosInstance from '../api/axiosInstance';
@@ -76,7 +77,7 @@ const QuestionCell: React.FC<QuestionCellProps> = ({
             borderRadius: '4px',
             border: '1px solid #d9d9d9',
           }}>
-            <ReactMarkdown>{question.description}</ReactMarkdown>
+            <DescriptionViewer content={question.description} />
           </div>
         </Space>
       </div>
@@ -560,7 +561,7 @@ const AssignmentNotebook: React.FC = () => {
                 background: '#f5f5f5',
                 borderRadius: '4px',
               }}>
-                <ReactMarkdown>{assignment.description}</ReactMarkdown>
+                <DescriptionViewer content={assignment.description} />
               </div>
             </>
           )}

@@ -19,6 +19,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import AssignmentDetail from './pages/AssignmentDetail';
 import AssignmentNotebook from './pages/AssignmentNotebook';
 import NotebookPage from './pages/NotebookPage';
+import LatexDemo from './pages/LatexDemo';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 
@@ -115,6 +116,16 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <TeacherSummary />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* LaTeX Demo - accessible to teachers for reference */}
+        <Route
+          path="/latex-demo"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <LatexDemo />
             </ProtectedRoute>
           }
         />
