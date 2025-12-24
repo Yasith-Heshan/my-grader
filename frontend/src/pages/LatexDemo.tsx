@@ -8,7 +8,7 @@ const { Title, Paragraph } = Typography;
  * Demo page showing LaTeX rendering capabilities
  */
 const LatexDemo: React.FC = () => {
-  const exampleContent1 = `
+    const exampleContent1 = `
 # Python Functions Assignment
 
 ## Overview
@@ -30,7 +30,7 @@ where:
 3. Handle edge case when $r \\leq 0$
 `;
 
-  const exampleContent2 = `
+    const exampleContent2 = `
 # Quadratic Equation Solver
 
 Solve the quadratic equation $ax^2 + bx + c = 0$ using the quadratic formula:
@@ -42,7 +42,7 @@ $$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$$
 - For $a=1, b=0, c=-4$: Solutions are $x=\\pm 2$
 `;
 
-  const exampleContent3 = `
+    const exampleContent3 = `
 # Calculus Problem
 
 ## Part A: Differentiation
@@ -61,7 +61,7 @@ Calculate the limit:
 $$\\lim_{x \\to 0} \\frac{\\sin(x)}{x} = 1$$
 `;
 
-  const exampleContent4 = `
+    const exampleContent4 = `
 # Matrix Operations
 
 ## Matrix Multiplication
@@ -77,62 +77,62 @@ The determinant of a $2 \\times 2$ matrix is:
 $$\\det(A) = \\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix} = ad - bc$$
 `;
 
-  return (
-    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
-      <Title level={2}>LaTeX Rendering Examples</Title>
-      <Paragraph>
-        These examples demonstrate how LaTeX expressions render in assignment descriptions.
-        Teachers can use inline math (with $...$) and display math (with $$...$$) to create
-        professional mathematical content.
-      </Paragraph>
-
-      <Divider />
-
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card title="Example 1: Basic Math Formula">
-          <DescriptionViewer content={exampleContent1} />
-        </Card>
-
-        <Card title="Example 2: Quadratic Formula">
-          <DescriptionViewer content={exampleContent2} />
-        </Card>
-
-        <Card title="Example 3: Calculus">
-          <DescriptionViewer content={exampleContent3} />
-        </Card>
-
-        <Card title="Example 4: Linear Algebra">
-          <DescriptionViewer content={exampleContent4} />
-        </Card>
-
-        <Card title="LaTeX Syntax Reference">
-          <Typography>
-            <Title level={5}>Inline Math</Title>
+    return (
+        <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+            <Title level={2}>LaTeX Rendering Examples</Title>
             <Paragraph>
-              Use single dollar signs: <code>$x^2 + y^2 = z^2$</code> renders as:{' '}
-              <DescriptionViewer content="$x^2 + y^2 = z^2$" />
+                These examples demonstrate how LaTeX expressions render in assignment descriptions.
+                Teachers can use inline math (with $...$) and display math (with $$...$$) to create
+                professional mathematical content.
             </Paragraph>
 
-            <Title level={5}>Display Math</Title>
-            <Paragraph>
-              Use double dollar signs: <code>$$\int_0^\infty e^{`{-x^2}`} dx$$</code> renders as:
-              <DescriptionViewer content="$$\\int_0^\\infty e^{-x^2} dx$$" />
-            </Paragraph>
+            <Divider />
 
-            <Title level={5}>Common Symbols</Title>
-            <ul>
-              <li>Greek letters: <code>\alpha, \beta, \gamma, \pi</code></li>
-              <li>Fractions: <code>\frac{`{numerator}{denominator}`}</code></li>
-              <li>Square root: <code>\sqrt{`{x}`}</code> or <code>\sqrt[n]{`{x}`}</code></li>
-              <li>Summation: <code>\sum_{`{i=1}^{n}`}</code></li>
-              <li>Integral: <code>\int_a^b</code></li>
-              <li>Limit: <code>\lim_{`{x \to \infty}`}</code></li>
-            </ul>
-          </Typography>
-        </Card>
-      </Space>
-    </div>
-  );
+            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+                <Card title="Example 1: Basic Math Formula">
+                    <DescriptionViewer content={exampleContent1} />
+                </Card>
+
+                <Card title="Example 2: Quadratic Formula">
+                    <DescriptionViewer content={exampleContent2} />
+                </Card>
+
+                <Card title="Example 3: Calculus">
+                    <DescriptionViewer content={exampleContent3} />
+                </Card>
+
+                <Card title="Example 4: Linear Algebra">
+                    <DescriptionViewer content={exampleContent4} />
+                </Card>
+
+                <Card title="LaTeX Syntax Reference">
+                    <Typography>
+                        <Title level={5}>Inline Math</Title>
+                        <Paragraph>
+                            Use single dollar signs: <code>$x^2 + y^2 = z^2$</code> renders as:{' '}
+                            <DescriptionViewer content="$x^2 + y^2 = z^2$" />
+                        </Paragraph>
+
+                        <Title level={5}>Display Math</Title>
+                        <Paragraph>
+                            Use double dollar signs: <code>$$\int_0^\infty e^{`{-x^2}`} dx$$</code> renders as:
+                            <DescriptionViewer content="$$\\int_0^\\infty e^{-x^2} dx$$" />
+                        </Paragraph>
+
+                        <Title level={5}>Common Symbols</Title>
+                        <ul>
+                            <li>Greek letters: <code>\alpha, \beta, \gamma, \pi</code></li>
+                            <li>Fractions: <code>\frac{`{numerator}{denominator}`}</code></li>
+                            <li>Square root: <code>\sqrt{`{x}`}</code> or <code>\sqrt[n]{`{x}`}</code></li>
+                            <li>Summation: <code>\sum_{`{i=1}^{n}`}</code></li>
+                            <li>Integral: <code>\int_a^b</code></li>
+                            <li>Limit: <code>\lim_{`{x \to \infty}`}</code></li>
+                        </ul>
+                    </Typography>
+                </Card>
+            </Space>
+        </div>
+    );
 };
 
 export default LatexDemo;
