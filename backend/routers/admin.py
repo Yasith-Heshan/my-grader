@@ -115,7 +115,8 @@ async def create_student(
 @router.get("/submissions")
 async def get_all_submissions(admin: Admin = Depends(get_admin_from_token)):
     """Admin views all student submissions"""
-    submissions = await submission_service.get_submissions(skip=0, limit=1000)
+    # Reuse existing service helper to fetch every submission
+    submissions = await submission_service.get_all_submissions()
     return submissions
 
 

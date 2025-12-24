@@ -2,7 +2,6 @@ import React from 'react';
 import { Layout, Card, List, Button, Typography, Tag, Empty, Space } from 'antd';
 import { CalendarOutlined, FileTextOutlined, TrophyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useStudentAssignments } from '../hooks/useAssignments';
 import { useMySubmissions } from '../hooks/useSubmissions';
 import './StudentDashboard.css';
@@ -12,7 +11,6 @@ const { Title, Text, Paragraph } = Typography;
 
 const StudentDashboard: React.FC = () => {
   const navigate = useNavigate();
-    const { user } = useAuth();
   const { data: assignments, isLoading: assignmentsLoading } = useStudentAssignments();
   const { data: submissions, isLoading: submissionsLoading } = useMySubmissions();
 

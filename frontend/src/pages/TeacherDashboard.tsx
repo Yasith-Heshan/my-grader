@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { Layout, Card, Button, Space, Table, Modal, Typography, Spin, Empty, Tabs, Dropdown } from 'antd';
-import { PlusOutlined, EyeOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Layout, Card, Button, Space, Table, Modal, Typography, Spin, Empty, Tabs } from 'antd';
+import { PlusOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useAssignments, useDeleteAssignment, useCreateAssignment } from '../hooks/useAssignments';
 import { useSubmissions, useGradeSubmission } from '../hooks/useSubmissions';
 import AssignmentForm from '../components/AssignmentForm';
@@ -16,8 +14,6 @@ const { Content } = Layout;
 const { Title } = Typography;
 
 const TeacherDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [viewSubmissions, setViewSubmissions] = useState(false);

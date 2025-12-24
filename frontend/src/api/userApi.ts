@@ -4,7 +4,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'teacher' | 'student';
+  role: 'teacher' | 'student' | 'admin';
+  student_number?: string;
 }
 
 export interface LoginDTO {
@@ -53,5 +54,31 @@ export const userApi = {
   // Logout
   logout: async (): Promise<void> => {
     await axiosInstance.post('/api/auth/logout');
+  },
+
+  // Admin endpoints
+  getAdminStudents: async (): Promise<User[]> => {
+    const response = await axiosInstance.get('/api/admin/students');
+    return response.data;
+  },
+
+  getAdminTeachers: async (): Promise<User[]> => {
+    const response = await axiosInstance.get('/api/admin/teachers');
+    return response.data;
+  },
+
+  createTeacher: async (data: { name: string; email: string; password: string }): Promise<any> => {
+    const response = await axiosInstance.post('/api/admin/create-teacher', data);
+    return response.data;
+  },
+
+  createStudent: async (data: { name: string; email: string; password: string; student_number?: string }): Promise<any> => {
+    const response = await axiosInstance.post('/api/admin/create-student', data);
+    return response.data;
+  },
+
+  getAdminSubmissions: async (): Promise<any[]> => {
+    const response = await axiosInstance.get('/api/admin/submissions');
+    return response.data;
   },
 };

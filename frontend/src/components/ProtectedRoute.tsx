@@ -5,7 +5,7 @@ import { Spin } from 'antd';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
-    allowedRoles?: ('teacher' | 'student')[];
+    allowedRoles?: ('teacher' | 'student' | 'admin')[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {

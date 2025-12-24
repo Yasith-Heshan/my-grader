@@ -21,6 +21,10 @@ import AssignmentNotebook from './pages/AssignmentNotebook';
 import NotebookPage from './pages/NotebookPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminAssignments from './pages/AdminAssignments';
+import AdminSubmissions from './pages/AdminSubmissions';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -115,6 +119,40 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <TeacherSummary />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminUsers />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/assignments"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminAssignments />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/submissions"
+          element={
+            <ProtectedRoute allowedRoles={['admin']}>
+              <AdminSubmissions />
             </ProtectedRoute>
           }
         />

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Layout, Card, Button, Typography, Space, Tag, Divider, Alert, Spin, Modal, Table } from 'antd';
 import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarOutlined, SendOutlined, CheckCircleOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { CalendarOutlined, SendOutlined, PlayCircleOutlined } from '@ant-design/icons';
 import ReactMarkdown from 'react-markdown';
 import { useAssignment } from '../hooks/useAssignments';
 import { useCreateSubmission } from '../hooks/useSubmissions';
@@ -10,7 +10,7 @@ import axiosInstance from '../api/axiosInstance';
 import { toast } from 'react-toastify';
 
 const { Content } = Layout;
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 interface TestResult {
   testcase_name: string;

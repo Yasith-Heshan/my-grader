@@ -1,14 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { userApi } from '../api/userApi';
+import { userApi, User } from '../api/userApi';
 import axiosInstance from '../api/axiosInstance';
 import { useStoreActions } from '../store';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: 'teacher' | 'student';
-}
 
 interface AuthContextType {
     user: User | null;

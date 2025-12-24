@@ -1,6 +1,6 @@
 import React from 'react';
 import { Table, Tag, Button, Space, Card } from 'antd';
-import { CheckCircleOutlined, CloseCircleOutlined, SyncOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, SyncOutlined } from '@ant-design/icons';
 import { Submission } from '../api/submissionApi';
 import type { ColumnsType } from 'antd/es/table';
 

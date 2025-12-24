@@ -69,7 +69,42 @@ const Navbar: React.FC = () => {
     },
   ];
 
-  const menuItems = currentUser?.role === 'teacher' ? teacherMenuItems : studentMenuItems;
+  const adminMenuItems = [
+    {
+      key: '/admin',
+      icon: <HomeOutlined />,
+      label: <Link to="/admin">Dashboard</Link>,
+    },
+    {
+      key: '/admin/users',
+      icon: <UserOutlined />,
+      label: <Link to="/admin/users">Users</Link>,
+    },
+    {
+      key: '/admin/assignments',
+      icon: <BookOutlined />,
+      label: <Link to="/admin/assignments">Assignments</Link>,
+    },
+    {
+      key: '/admin/submissions',
+      icon: <FileTextOutlined />,
+      label: <Link to="/admin/submissions">Submissions</Link>,
+    },
+    {
+      key: '/profile',
+      icon: <UserOutlined />,
+      label: <Link to="/profile">Profile</Link>,
+    },
+  ];
+
+  const menuItems = 
+    currentUser?.role === 'teacher' 
+      ? teacherMenuItems 
+      : currentUser?.role === 'admin'
+      ? adminMenuItems
+      : currentUser?.role === 'student'
+      ? studentMenuItems
+      : studentMenuItems;
 
   return (
     <Header

@@ -15,12 +15,12 @@ import traceback
 # Imports work both when run directly (python main.py) and as module (python -m uvicorn backend.main:app)
 try:
     # Try backend-qualified imports first (when running as module from repo root)
-    from backend.routers import teacher, student, auth
+    from backend.routers import teacher, student, auth, admin
     from backend.database import connect_to_mongo, close_mongo_connection
 except ModuleNotFoundError:
     # Fall back to relative imports when running directly from backend folder
     sys.path.insert(0, os.path.dirname(__file__))
-    from routers import teacher, student, auth
+    from routers import teacher, student, auth, admin
     from database import connect_to_mongo, close_mongo_connection
 
 
@@ -90,6 +90,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.include_router(teacher.router, prefix="/api/teacher", tags=["Teacher"])
 app.include_router(student.router, prefix="/api/student", tags=["Student"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(admin.router, prefix="/api/admin", tags=["Admin"])
 
 
 @app.get("/")

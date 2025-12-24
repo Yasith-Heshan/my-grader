@@ -5,18 +5,10 @@ import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 
 export const useCurrentUser = () => {
-  const setCurrentUser = useStoreActions((actions) => actions.user.setCurrentUser);
-
   return useQuery({
     queryKey: ['user', 'me'],
     queryFn: userApi.getCurrentUser,
     retry: false,
-    onSuccess: (data) => {
-      setCurrentUser(data);
-    },
-    onError: () => {
-      setCurrentUser(null);
-    },
   });
 };
 

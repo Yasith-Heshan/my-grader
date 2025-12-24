@@ -37,13 +37,13 @@ const UserManagement: React.FC = () => {
       <Row gutter={16}>
         <Col span={12}>
           <Card title="Teachers">
-            {loadingTeachers ? <Spin /> : <Table dataSource={teachers || []} columns={teacherColumns} rowKey={(r) => r._id || r.id || r.email} pagination={false} />}
+            {loadingTeachers ? <Spin /> : <Table dataSource={teachers || []} columns={teacherColumns} rowKey={(r) => r.id} pagination={false} />}
           </Card>
         </Col>
 
         <Col span={12}>
           <Card title="Students">
-            {loadingStudents ? <Spin /> : <Table dataSource={students || []} columns={studentColumns} rowKey={(r) => r._id || r.id || r.email} pagination={false} />}
+            {loadingStudents ? <Spin /> : <Table dataSource={students || []} columns={studentColumns} rowKey={(r) => r.id} pagination={false} />}
           </Card>
         </Col>
       </Row>
