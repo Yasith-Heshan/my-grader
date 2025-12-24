@@ -25,7 +25,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 ALGORITHM = "HS256"
 
 
-def create_access_token(subject: str, role: str, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(
+    subject: str, role: str, expires_delta: Optional[timedelta] = None
+) -> str:
     if expires_delta is None:
         expires_delta = timedelta(minutes=settings.jwt_expiration_minutes)
     expire = datetime.utcnow() + expires_delta

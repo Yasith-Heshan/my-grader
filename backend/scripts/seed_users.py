@@ -7,6 +7,7 @@ python backend/scripts/seed_users.py
 The script will connect to MongoDB using the same settings as the app,
 create two users if they don't already exist, and print the results.
 """
+
 import asyncio
 import os
 import sys
@@ -28,7 +29,11 @@ async def seed():
         if existing_t:
             print(f"Teacher already exists: {t_email} -> id={existing_t.id}")
         else:
-            teacher = Teacher(name="Sample Teacher", email=t_email, password_hash=hash_password("teacher123"))
+            teacher = Teacher(
+                name="Sample Teacher",
+                email=t_email,
+                password_hash=hash_password("teacher123"),
+            )
             await teacher.insert()
             print(f"Created teacher: {t_email} -> id={teacher.id}")
 
@@ -38,7 +43,12 @@ async def seed():
         if existing_s:
             print(f"Student already exists: {s_email} -> id={existing_s.id}")
         else:
-            student = Student(name="Sample Student", email=s_email, student_number="S100", password_hash=hash_password("student123"))
+            student = Student(
+                name="Sample Student",
+                email=s_email,
+                student_number="S100",
+                password_hash=hash_password("student123"),
+            )
             await student.insert()
             print(f"Created student: {s_email} -> id={student.id}")
 
