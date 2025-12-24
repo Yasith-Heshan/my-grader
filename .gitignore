@@ -88,3 +88,6 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+frontend/node_modules/
+frontend/node_modules
+grader/
