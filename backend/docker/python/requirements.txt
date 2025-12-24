@@ -1,0 +1,13 @@
+# Minimal Python packages for student code execution
+# Only include safe, commonly used packages for assignments
+
+# No external dependencies by default
+# Students should not need external packages for basic assignments
+
+# If needed for specific assignments, add ONLY these safe packages:
+# numpy==1.24.3
+# pandas==2.0.2
+# matplotlib==3.7.1
+# scipy==1.10.1
+
+# For now, keep it minimal - only standard library

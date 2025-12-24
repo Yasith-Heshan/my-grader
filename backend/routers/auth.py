@@ -11,7 +11,7 @@ from utils.security import (
     decode_access_token,
 )
 from middleware.auth import get_current_user
-from config import settings
+from settings import settings
 
 router = APIRouter()
 

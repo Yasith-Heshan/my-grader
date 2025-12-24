@@ -5,7 +5,7 @@ import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from models import Teacher, Student, Assignment, TestCase, Submission, SubmissionItem
-from config import settings
+from settings import settings
 
 async def test_models():
     print("Connecting to MongoDB...")

@@ -10,7 +10,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import settings
+from settings import settings
 
 async def clear_database():
     """Clear all collections in the database"""

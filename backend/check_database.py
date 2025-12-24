@@ -3,7 +3,7 @@ Check MongoDB database contents
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
-from config import settings
+from settings import settings
 
 async def check_database():
     print("Connecting to MongoDB...")

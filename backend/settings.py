@@ -19,9 +19,30 @@ class Settings(BaseSettings):
     app_name: str = "Python Notebook Grading System"
     app_version: str = "2.0.0"
     debug: bool = True
+    
     # Security settings
     secret_key: str = "change-me-to-a-secure-random-value"
     jwt_expiration_minutes: int = 60 * 24  # 1 day by default
+    
+    # Docker Executor Settings
+    docker_enabled: bool = True
+    docker_host: Optional[str] = None
+    fallback_to_local: bool = True
+    require_docker: bool = False
+    default_timeout: int = 10
+    default_memory_limit: str = "256m"
+    default_cpu_quota: int = 50000
+    max_concurrent_containers: int = 10
+    container_cleanup_delay: int = 5
+    container_auto_remove: bool = True
+    network_disabled: bool = True
+    read_only_rootfs: bool = True
+    max_output_size: int = 10240
+    python_docker_image: str = "grader-python-sandbox:latest"
+    log_execution_details: bool = True
+    log_student_code: bool = False
+    execution_pool_size: int = 5
+    enable_caching: bool = False
 
     class Config:
         env_file = ".env"

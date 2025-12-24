@@ -5,7 +5,7 @@ Database configuration and connection management for MongoDB
 from motor.motor_asyncio import AsyncIOMotorClient
 from beanie import init_beanie
 from typing import Optional
-from config import settings
+from settings import settings
 
 # Global client instance
 mongodb_client: Optional[AsyncIOMotorClient] = None

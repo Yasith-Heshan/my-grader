@@ -12,42 +12,57 @@ from contextlib import contextmanager
 
 from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment, SingleCellTestCase
 from schemas import GradingResult, SubmissionItemResponse, StudentResult, AssignmentSummary
+from utils.executor_factory import ExecutorFactory
+from utils.executor_interface import ExecutionConfig, ExecutionLanguage
 
-def grade_single_cell(
+async def grade_single_cell(
     test_case: TestCase,
     submission_item: SubmissionItem
 ) -> Dict[str, Any]:
     """
-    Grade a single cell submission against a test case.
-    This is a placeholder implementation that executes the student code
-    and the test code to verify correctness.
+    Grade a single cell submission against a test case using secure Docker execution.
     """
     try:
-        # Create a namespace for code execution
-        namespace = {}
+        # Create executor instance
+        executor = await ExecutorFactory.get_default_executor()
         
-        # Capture stdout
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
+        # Create execution configuration
+        config = ExecutionConfig(
+            timeout=10,
+            memory_limit="256m",
+            language=ExecutionLanguage.PYTHON
+        )
         
-        # Execute student's submitted code
-        exec(submission_item.submitted_code, namespace)
+        # Execute in Docker container (student code and test code separately)
+        result = await executor.execute(
+            student_code=submission_item.submitted_code,
+            test_code=test_case.test_code,
+            config_override=config
+        )
         
-        # Execute test code in the same namespace
-        exec(test_case.test_code, namespace)
+        # Check if execution was successful
+        if not result.success:
+            return {
+                'passed': False,
+                'score': 0.0,
+                'max_score': test_case.points,
+                'output': result.stdout,
+                'feedback': f'Execution error: {result.error_message or result.stderr}'
+            }
         
-        # Get the output
-        output = sys.stdout.getvalue()
-        sys.stdout = old_stdout
+        # Parse the result - test_code should print results in a specific format
+        # or set variables that we can capture
+        output = result.stdout
         
-        # Check if test passed (test_code should set 'passed' variable)
-        passed = namespace.get('passed', False)
+        # Try to determine if test passed from output or return value
+        # The test code should output "PASSED" or set a variable
+        passed = 'PASSED' in output.upper() or result.return_value == True
         
         # Calculate score
         score = test_case.points if passed else 0.0
         
         # Generate feedback
-        feedback = namespace.get('feedback', 'Test executed successfully' if passed else 'Test failed')
+        feedback = output if output else ('Test passed' if passed else 'Test failed')
         
         return {
             'passed': passed,
@@ -58,9 +73,6 @@ def grade_single_cell(
         }
         
     except Exception as e:
-        # Restore stdout
-        sys.stdout = old_stdout
-        
         return {
             'passed': False,
             'score': 0.0,
@@ -117,13 +129,21 @@ async def grade_submission(submission_id: str) -> GradingResult:
         submission.graded_at = datetime.utcnow()
         await submission.save()
         
+        # Calculate percentage and message
+        percentage = (total_score / max_score * 100) if max_score > 0 else 0
+        passed_tests = 1 if total_score >= max_score * 0.7 else 0
+        total_tests = 1
+        
         return GradingResult(
             submission_id=str(submission.id),
+            status="completed",
             total_score=total_score,
             max_score=max_score,
-            passed_count=1 if total_score >= max_score * 0.7 else 0,
-            failed_count=0 if total_score >= max_score * 0.7 else 1,
-            items=[]
+            percentage=percentage,
+            passed_items=passed_tests,
+            total_items=total_tests,
+            items=[],
+            message=f"Grading completed. Score: {total_score:.1f}/{max_score:.1f} ({percentage:.1f}%)"
         )
     
     # Original code for multi-cell submissions with SubmissionItems
@@ -144,8 +164,8 @@ async def grade_submission(submission_id: str) -> GradingResult:
         if not test_case:
             continue
         
-        # Grade the item
-        result = grade_single_cell(test_case, item)
+        # Grade the item (now async)
+        result = await grade_single_cell(test_case, item)
         
         # Update submission item with results
         item.passed = result['passed']
@@ -367,26 +387,26 @@ async def evaluate_single_cell(
             "results": []
         }
     
-    # Execute student code and collect namespace
-    student_namespace = {}
-    student_output = ""
-    student_error = None
+    # Create executor instance
+    executor = await ExecutorFactory.get_default_executor()
     
-    try:
-        # Capture stdout during student code execution
-        old_stdout = sys.stdout
-        sys.stdout = StringIO()
-        
-        # Execute student code
-        exec(student_code, student_namespace)
-        
-        # Get captured output
-        student_output = sys.stdout.getvalue()
-        sys.stdout = old_stdout
-        
-    except Exception as e:
-        sys.stdout = old_stdout
-        student_error = f"Error in student code: {str(e)}\n{traceback.format_exc()}"
+    # Execute student code first to get variables/functions defined
+    student_config = ExecutionConfig(
+        timeout=timeout if timeout else 10,
+        memory_limit="256m",
+        language=ExecutionLanguage.PYTHON
+    )
+    
+    # Execute student code with empty test code to just run it
+    student_result = await executor.execute(
+        student_code=student_code,
+        test_code="# Student code executed above",
+        config_override=student_config
+    )
+    student_output = student_result.stdout
+    
+    if not student_result.success:
+        student_error = f"Error in student code: {student_result.error_message or student_result.stderr}"
         
         return {
             "success": False,
@@ -406,57 +426,84 @@ async def evaluate_single_cell(
         max_score += testcase.points
         
         try:
-            # Create namespace for testcase execution
-            testcase_namespace = {
-                'submission': student_namespace,
-                'math': __import__('math'),
-                'json': __import__('json'),
-                'datetime': __import__('datetime'),
-            }
+            # Combine student code with testcase function and execution code
+            # The testcase function should accept the student namespace/variables
+            combined_test_code = f"""
+# Student code
+{student_code}
+
+# Test function
+{testcase.testcase_function}
+
+# Execute test function
+import json
+try:
+    # The test function should exist now
+    result = {testcase.testcase_name}(globals())
+    # Output result as JSON so we can parse it
+    print("__TEST_RESULT__")
+    print(json.dumps(result if isinstance(result, dict) else {{"score": 0.0, "feedback": "Invalid result format"}}))
+except Exception as e:
+    print("__TEST_RESULT__")
+    print(json.dumps({{"score": 0.0, "feedback": f"Error: {{str(e)}}"}}))
+"""
             
             # Use testcase timeout or provided timeout
             exec_timeout = timeout if timeout is not None else testcase.timeout
             
-            # Execute testcase function
-            exec(testcase.testcase_function, testcase_namespace)
+            test_config = ExecutionConfig(
+                timeout=exec_timeout,
+                memory_limit="256m",
+                language=ExecutionLanguage.PYTHON
+            )
             
-            # Find the test function (should match testcase_name)
-            test_func = testcase_namespace.get(testcase.testcase_name)
+            # Execute testcase with Docker
+            # Pass empty student_code since it's already in combined_test_code
+            test_result = await executor.execute(
+                student_code="",  # Already included in combined_test_code
+                test_code=combined_test_code,
+                config_override=test_config
+            )
             
-            if not test_func:
-                # Try to find any function that's not a builtin
-                for name, obj in testcase_namespace.items():
-                    if callable(obj) and not name.startswith('_') and name not in ['math', 'json', 'datetime', 'submission']:
-                        test_func = obj
-                        break
-            
-            if not test_func or not callable(test_func):
+            if not test_result.success:
                 testcase_results.append({
                     "testcase_name": testcase.testcase_name,
                     "passed": False,
                     "score": 0.0,
                     "max_score": testcase.points,
-                    "feedback": f"Testcase function '{testcase.testcase_name}' not found"
+                    "feedback": f"Test execution failed: {test_result.error_message or test_result.stderr}"
                 })
                 continue
             
-            # Execute the test function with timeout
-            try:
-                with time_limit(exec_timeout):
-                    result = test_func(student_namespace)
-            except TimeoutException:
+            # Parse the JSON result from output
+            import json
+            output_lines = test_result.stdout.strip().split('\n')
+            result_dict = None
+            
+            # Find the __TEST_RESULT__ marker and parse JSON
+            for i, line in enumerate(output_lines):
+                if line == "__TEST_RESULT__" and i + 1 < len(output_lines):
+                    try:
+                        result_dict = json.loads(output_lines[i + 1])
+                        break
+                    except json.JSONDecodeError:
+                        pass
+            
+            if not result_dict:
                 testcase_results.append({
                     "testcase_name": testcase.testcase_name,
                     "passed": False,
                     "score": 0.0,
                     "max_score": testcase.points,
-                    "feedback": f"Test execution timed out (>{exec_timeout}s)"
+                    "feedback": f"Could not parse test result"
                 })
+                continue
+            
                 continue
             
             # Parse result
-            if isinstance(result, dict):
-                test_score = result.get('score', 0.0)
+            if isinstance(result_dict, dict):
+                test_score = result_dict.get('score', 0.0)
                 if isinstance(test_score, (int, float)):
                     # Normalize score to points
                     if 0 <= test_score <= 1:
@@ -468,7 +515,7 @@ async def evaluate_single_cell(
                 else:
                     actual_score = 0.0
                 
-                feedback = result.get('feedback', 'Test executed')
+                feedback = result_dict.get('feedback', 'Test executed')
                 passed = actual_score >= testcase.points * 0.5  # Pass if >= 50%
                 
                 testcase_results.append({

@@ -1,0 +1,182 @@
+{
+    "teacher": {
+        "name": "Dr. Sarah Johnson",
+        "email": "sarah.johnson@university.edu",
+        "password": "Teacher123!",
+        "department": "Computer Science"
+    },
+    "students": [
+        {
+            "name": "Alice Chen",
+            "email": "alice.chen@student.edu",
+            "student_id": "CS2024001",
+            "password": "Student123!"
+        },
+        {
+            "name": "Bob Martinez",
+            "email": "bob.martinez@student.edu",
+            "student_id": "CS2024002",
+            "password": "Student123!"
+        },
+        {
+            "name": "Carol Williams",
+            "email": "carol.williams@student.edu",
+            "student_id": "CS2024003",
+            "password": "Student123!"
+        }
+    ],
+    "assignment": {
+        "title": "Python Fundamentals - Week 1",
+        "description": "Practice basic Python programming concepts including variables, data types, arithmetic operations, and simple string manipulation.",
+        "due_date": "2025-12-31T23:59:59",
+        "total_points": 50,
+        "questions": [
+            {
+                "question_number": 1,
+                "title": "Variable Declaration",
+                "description": "Create a variable named 'age' and assign it the value 25",
+                "points": 5,
+                "cell_id": "q1"
+            },
+            {
+                "question_number": 2,
+                "title": "Simple Arithmetic",
+                "description": "Calculate the product of 8 and 9, and store it in a variable named 'product'",
+                "points": 10,
+                "cell_id": "q2"
+            },
+            {
+                "question_number": 3,
+                "title": "String Variable",
+                "description": "Create a variable 'greeting' containing the string 'Hello, World!'",
+                "points": 5,
+                "cell_id": "q3"
+            },
+            {
+                "question_number": 4,
+                "title": "List Creation",
+                "description": "Create a list named 'numbers' containing the integers 1, 2, 3, 4, 5",
+                "points": 10,
+                "cell_id": "q4"
+            },
+            {
+                "question_number": 5,
+                "title": "Sum Calculation",
+                "description": "Calculate the sum of 15, 30, and 45, store it in a variable named 'total'",
+                "points": 10,
+                "cell_id": "q5"
+            },
+            {
+                "question_number": 6,
+                "title": "String Length",
+                "description": "Create a string 'message' with value 'Python' and store its length in a variable 'msg_length'",
+                "points": 10,
+                "cell_id": "q6"
+            }
+        ],
+        "test_cases": [
+            {
+                "question_number": 1,
+                "cell_id": "q1",
+                "test_code": "passed = 'age' in locals() and age == 25\nfeedback = 'Perfect! age = 25' if passed else 'Create variable age with value 25'",
+                "points": 5
+            },
+            {
+                "question_number": 2,
+                "cell_id": "q2",
+                "test_code": "passed = 'product' in locals() and product == 72\nfeedback = 'Excellent! 8 * 9 = 72' if passed else f'Expected 72, got {product if \"product\" in locals() else \"nothing\"}'",
+                "points": 10
+            },
+            {
+                "question_number": 3,
+                "cell_id": "q3",
+                "test_code": "passed = 'greeting' in locals() and greeting == 'Hello, World!'\nfeedback = 'Great job!' if passed else f'Expected \"Hello, World!\", got {greeting if \"greeting\" in locals() else \"nothing\"}'",
+                "points": 5
+            },
+            {
+                "question_number": 4,
+                "cell_id": "q4",
+                "test_code": "passed = 'numbers' in locals() and numbers == [1, 2, 3, 4, 5]\nfeedback = 'Perfect list!' if passed else f'Expected [1, 2, 3, 4, 5], got {numbers if \"numbers\" in locals() else \"nothing\"}'",
+                "points": 10
+            },
+            {
+                "question_number": 5,
+                "cell_id": "q5",
+                "test_code": "passed = 'total' in locals() and total == 90\nfeedback = 'Correct! 15 + 30 + 45 = 90' if passed else f'Expected 90, got {total if \"total\" in locals() else \"nothing\"}'",
+                "points": 10
+            },
+            {
+                "question_number": 6,
+                "cell_id": "q6",
+                "test_code": "passed = 'message' in locals() and message == 'Python' and 'msg_length' in locals() and msg_length == 6\nfeedback = 'Excellent!' if passed else 'Check message=\"Python\" and msg_length=len(message)'",
+                "points": 10
+            }
+        ]
+    },
+    "student_submissions": {
+        "alice_perfect": {
+            "student_email": "alice.chen@student.edu",
+            "description": "Alice's perfect submission - all correct answers",
+            "code": "# Question 1\nage = 25\n\n# Question 2\nproduct = 8 * 9\n\n# Question 3\ngreeting = 'Hello, World!'\n\n# Question 4\nnumbers = [1, 2, 3, 4, 5]\n\n# Question 5\ntotal = 15 + 30 + 45\n\n# Question 6\nmessage = 'Python'\nmsg_length = len(message)",
+            "expected_score": 50,
+            "expected_percentage": 100
+        },
+        "bob_partial": {
+            "student_email": "bob.martinez@student.edu",
+            "description": "Bob's partial submission - some correct, some wrong",
+            "code": "# Question 1\nage = 25\n\n# Question 2\nproduct = 64  # Wrong answer\n\n# Question 3\ngreeting = 'Hello, World!'\n\n# Question 4\nnumbers = [1, 2, 3]  # Incomplete list\n\n# Question 5\ntotal = 90\n\n# Question 6\nmessage = 'Python'\nmsg_length = 5  # Wrong length",
+            "expected_score": 30,
+            "expected_percentage": 60
+        },
+        "carol_with_errors": {
+            "student_email": "carol.williams@student.edu",
+            "description": "Carol's submission with runtime errors",
+            "code": "# Question 1\nage = 25\n\n# Question 2\nproduct = 8 * 9\n\n# Question 3\ngreeting = 'Hello, World!'\n\n# Question 4\nnumbers = [1, 2, 3, 4, 5]\n\n# Question 5\ntotal = 15 + 30 + 45\n\n# Question 6\nmessage = 'Python'\nmsg_length = len(undefined_variable)  # This will cause an error",
+            "expected_score": 40,
+            "expected_percentage": 80,
+            "has_errors": true
+        }
+    },
+    "individual_cell_tests": {
+        "q1_correct": {
+            "cell_id": "q1",
+            "code": "age = 25",
+            "expected_pass": true
+        },
+        "q1_wrong": {
+            "cell_id": "q1",
+            "code": "age = 30",
+            "expected_pass": false
+        },
+        "q2_correct": {
+            "cell_id": "q2",
+            "code": "product = 8 * 9",
+            "expected_pass": true
+        },
+        "q2_wrong": {
+            "cell_id": "q2",
+            "code": "product = 8 + 9",
+            "expected_pass": false
+        },
+        "q3_correct": {
+            "cell_id": "q3",
+            "code": "greeting = 'Hello, World!'",
+            "expected_pass": true
+        },
+        "q4_correct": {
+            "cell_id": "q4",
+            "code": "numbers = [1, 2, 3, 4, 5]",
+            "expected_pass": true
+        },
+        "q5_correct": {
+            "cell_id": "q5",
+            "code": "total = 15 + 30 + 45",
+            "expected_pass": true
+        },
+        "q6_correct": {
+            "cell_id": "q6",
+            "code": "message = 'Python'\nmsg_length = len(message)",
+            "expected_pass": true
+        }
+    }
+}

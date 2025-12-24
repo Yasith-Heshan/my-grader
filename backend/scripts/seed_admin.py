@@ -14,7 +14,7 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from models import Teacher, Student, Admin
 from utils.security import hash_password
-from config import settings
+from settings import settings
 
 
 async def seed_admins():
