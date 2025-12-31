@@ -39,11 +39,6 @@ const Navbar: React.FC = () => {
       icon: <UserOutlined />,
       label: <Link to="/profile">Profile</Link>,
     },
-    {
-      key: '/users',
-      icon: <UserOutlined />,
-      label: <Link to="/users">Users</Link>,
-    },
   ];
 
   const studentMenuItems = [
@@ -61,11 +56,6 @@ const Navbar: React.FC = () => {
       key: '/profile',
       icon: <UserOutlined />,
       label: <Link to="/profile">Profile</Link>,
-    },
-    {
-      key: '/users',
-      icon: <UserOutlined />,
-      label: <Link to="/users">Users</Link>,
     },
   ];
 

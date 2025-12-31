@@ -103,14 +103,14 @@ const SubmissionList: React.FC<SubmissionListProps> = ({
                 View
               </Button>
             )}
-            {onGrade && !isGraded && (
+            {onGrade && (
               <Button
-                type="primary"
+                type={isGraded ? 'default' : 'primary'}
                 size="small"
                 onClick={() => onGrade(record.id)}
                 icon={<SyncOutlined />}
               >
-                Grade
+                {isGraded ? 'Re-grade' : 'Grade'}
               </Button>
             )}
           </Space>
