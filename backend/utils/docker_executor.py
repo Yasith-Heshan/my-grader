@@ -2,7 +2,6 @@
 Docker-based secure code executor
 Executes student code in isolated Docker containers with resource limits
 """
-import asyncio
 import docker
 from docker.errors import DockerException, NotFound, APIError
 from typing import Optional, Dict, Any
@@ -13,33 +12,16 @@ import time
 from pathlib import Path
 import logging
 
-from .executor_interface import (
-    CodeExecutor, ExecutionConfig, ExecutionResult, ExecutionLanguage
-)
+from .executor_interface import CodeExecutor, ExecutionConfig, ExecutionResult
 from config.executor_config import ExecutorConfig
 
 logger = logging.getLogger(__name__)
 
 
 class DockerExecutor(CodeExecutor):
-    """
-    Docker-based code executor with security isolation
-    
-    Features:
-    - Process isolation via containers
-    - Resource limits (CPU, memory, timeout)
-    - Network isolation
-    - Read-only filesystem
-    - Automatic cleanup
-    """
+    """Docker-based code executor with security isolation"""
     
     def __init__(self, config: Optional[ExecutionConfig] = None):
-        """
-        Initialize Docker executor
-        
-        Args:
-            config: Execution configuration
-        """
         super().__init__(config)
         self.docker_client: Optional[docker.DockerClient] = None
         self._container_count = 0
@@ -50,30 +32,19 @@ class DockerExecutor(CodeExecutor):
         try:
             # Auto-detect Docker host based on platform
             if os.name == 'nt':  # Windows
-                # Try npipe first, fall back to TCP
                 try:
-                    self.docker_client = docker.DockerClient(
-                        base_url='npipe:////./pipe/docker_engine'
-                    )
+                    self.docker_client = docker.DockerClient(base_url='npipe:////./pipe/docker_engine')
                 except:
-                    self.docker_client = docker.DockerClient(
-                        base_url='tcp://localhost:2375'
-                    )
+                    self.docker_client = docker.DockerClient(base_url='tcp://localhost:2375')
             else:  # Unix/Linux/Mac
                 self.docker_client = docker.from_env()
             
-            # Verify connection
             self.docker_client.ping()
             logger.info("Docker client initialized successfully")
             
         except DockerException as e:
             logger.error(f"Failed to initialize Docker client: {e}")
             self.docker_client = None
-            if ExecutorConfig.REQUIRE_DOCKER:
-                raise RuntimeError(
-                    "Docker is required but not available. "
-                    "Please ensure Docker is installed and running."
-                ) from e
     
     async def execute(
         self,
@@ -81,23 +52,10 @@ class DockerExecutor(CodeExecutor):
         test_code: str,
         config_override: Optional[ExecutionConfig] = None
     ) -> ExecutionResult:
-        """
-        Execute student code in a Docker container
-        
-        Args:
-            student_code: Student's submitted code
-            test_code: Test/grading code
-            config_override: Optional configuration override
-            
-        Returns:
-            ExecutionResult with execution details
-        """
+        """Execute student code in a Docker container"""
         if not self.docker_client:
-            raise RuntimeError(
-                "Docker client not available. Cannot execute code."
-            )
+            raise RuntimeError("Docker client not available")
         
-        # Use override config if provided
         exec_config = config_override or self.config
         
         # Check concurrent container limit
@@ -105,7 +63,7 @@ class DockerExecutor(CodeExecutor):
             return ExecutionResult(
                 success=False,
                 error_message=f"Maximum concurrent containers ({ExecutorConfig.MAX_CONCURRENT_CONTAINERS}) reached",
-                feedback="System is currently busy. Please try again in a moment."
+                feedback="System is currently busy. Please try again."
             )
         
         start_time = time.time()
@@ -113,36 +71,23 @@ class DockerExecutor(CodeExecutor):
         temp_dir = None
         
         try:
-            # Create temporary directory for code files
+            # Create temporary directory with code files
             temp_dir = tempfile.mkdtemp(prefix="grader_")
-            
-            # Write code files
             student_file = Path(temp_dir) / "student_code.py"
             test_file = Path(temp_dir) / "test_code.py"
             runner_file = Path(temp_dir) / "runner.py"
             
             student_file.write_text(student_code, encoding='utf-8')
             test_file.write_text(test_code, encoding='utf-8')
+            runner_file.write_text(self._create_runner_script(), encoding='utf-8')
             
-            # Create runner script that executes both files
-            runner_script = self._create_runner_script(exec_config)
-            runner_file.write_text(runner_script, encoding='utf-8')
-            
-            # Get Docker image
+            # Get image and ensure it exists
             image = ExecutorConfig.get_docker_image(exec_config.language.value)
-            
-            # Ensure image exists
             await self._ensure_image_exists(image)
             
             # Create and run container
             self._container_count += 1
-            container = await self._create_container(
-                image=image,
-                temp_dir=temp_dir,
-                config=exec_config
-            )
-            
-            # Start container
+            container = await self._create_container(image, temp_dir, exec_config)
             container.start()
             
             # Wait for container with timeout
@@ -150,7 +95,6 @@ class DockerExecutor(CodeExecutor):
                 exit_code = container.wait(timeout=exec_config.timeout)
                 timeout_occurred = False
             except Exception:
-                # Timeout occurred
                 timeout_occurred = True
                 exit_code = {'StatusCode': -1}
                 container.stop(timeout=1)
@@ -159,51 +103,42 @@ class DockerExecutor(CodeExecutor):
             stdout = container.logs(stdout=True, stderr=False).decode('utf-8', errors='replace')
             stderr = container.logs(stdout=False, stderr=True).decode('utf-8', errors='replace')
             
-            # Truncate output if too large
-            if len(stdout) > ExecutorConfig.MAX_OUTPUT_SIZE:
-                stdout = stdout[:ExecutorConfig.MAX_OUTPUT_SIZE] + "\n... (output truncated)"
-            if len(stderr) > ExecutorConfig.MAX_OUTPUT_SIZE:
-                stderr = stderr[:ExecutorConfig.MAX_OUTPUT_SIZE] + "\n... (output truncated)"
+            # Truncate if too large
+            max_size = ExecutorConfig.MAX_OUTPUT_SIZE
+            if len(stdout) > max_size:
+                stdout = stdout[:max_size] + "\n...(truncated)"
+            if len(stderr) > max_size:
+                stderr = stderr[:max_size] + "\n...(truncated)"
             
-            # Calculate execution time
             execution_time = time.time() - start_time
-            
-            # Parse results from stdout (JSON format expected)
             result = self._parse_results(stdout, stderr, exit_code, timeout_occurred, execution_time)
             
             if ExecutorConfig.LOG_EXECUTION_DETAILS:
-                logger.info(
-                    f"Execution completed - Success: {result.success}, "
-                    f"Time: {execution_time:.2f}s, Exit: {exit_code.get('StatusCode', -1)}"
-                )
+                logger.info(f"Execution - Success: {result.success}, Time: {execution_time:.2f}s")
             
             return result
             
         except DockerException as e:
-            logger.error(f"Docker error during execution: {e}")
+            logger.error(f"Docker error: {e}")
             return ExecutionResult(
                 success=False,
                 error_message=f"Docker error: {str(e)}",
-                feedback="An error occurred while setting up the execution environment."
+                feedback="Error setting up execution environment"
             )
-        
         except Exception as e:
-            logger.error(f"Unexpected error during execution: {e}", exc_info=True)
+            logger.error(f"Execution error: {e}", exc_info=True)
             return ExecutionResult(
                 success=False,
                 error_message=f"Execution error: {str(e)}",
-                feedback="An unexpected error occurred during code execution."
+                feedback="Unexpected error during execution"
             )
-        
         finally:
-            # Cleanup
             self._container_count -= 1
             if container:
                 try:
                     container.remove(force=True)
                 except Exception as e:
                     logger.warning(f"Failed to remove container: {e}")
-            
             if temp_dir and os.path.exists(temp_dir):
                 try:
                     import shutil
@@ -211,81 +146,41 @@ class DockerExecutor(CodeExecutor):
                 except Exception as e:
                     logger.warning(f"Failed to cleanup temp directory: {e}")
     
-    async def _create_container(
-        self,
-        image: str,
-        temp_dir: str,
-        config: ExecutionConfig
-    ) -> Any:
-        """
-        Create Docker container with security constraints
+    async def _create_container(self, image: str, temp_dir: str, config: ExecutionConfig) -> Any:
+        """Create Docker container with security constraints"""
+        volumes = {temp_dir: {'bind': '/sandbox', 'mode': 'ro'}}
         
-        Args:
-            image: Docker image name
-            temp_dir: Temporary directory with code files
-            config: Execution configuration
-            
-        Returns:
-            Docker container object
-        """
-        # Mount temporary directory as read-only volume
-        volumes = {
-            temp_dir: {
-                'bind': '/sandbox',
-                'mode': 'ro'  # Read-only
-            }
-        }
-        
-        # Security and resource limits
         container_config = {
             'image': image,
             'command': ['python', '/sandbox/runner.py'],
             'volumes': volumes,
             'working_dir': '/sandbox',
             'detach': True,
-            'auto_remove': False,  # We'll remove manually for better control
+            'auto_remove': False,
             'network_disabled': config.network_disabled,
             'mem_limit': config.memory_limit,
-            'memswap_limit': config.memory_limit,  # Disable swap
+            'memswap_limit': config.memory_limit,
             'cpu_quota': config.cpu_quota,
-            'cpu_period': 100000,  # Standard period
-            'pids_limit': 50,  # Limit number of processes
+            'cpu_period': 100000,
+            'pids_limit': 50,
             'read_only': config.read_only_rootfs,
-            'tmpfs': {
-                '/tmp': 'size=10M,mode=1777'  # Small writable tmp
-            },
-            'security_opt': ['no-new-privileges'],  # Prevent privilege escalation
-            'cap_drop': ['ALL'],  # Drop all capabilities
-            'user': 'sandbox',  # Run as non-root user
+            'tmpfs': {'/tmp': 'size=10M,mode=1777'},
+            'security_opt': ['no-new-privileges'],
+            'cap_drop': ['ALL'],
+            'user': 'sandbox',
         }
         
-        # Create container
-        container = self.docker_client.containers.create(**container_config)
-        
-        return container
+        return self.docker_client.containers.create(**container_config)
     
-    def _create_runner_script(self, config: ExecutionConfig) -> str:
-        """
-        Create Python runner script that executes student and test code
-        
-        Args:
-            config: Execution configuration
-            
-        Returns:
-            Python script as string
-        """
+    def _create_runner_script(self) -> str:
+        """Create Python runner script that executes student and test code"""
         return '''#!/usr/bin/env python3
-"""
-Runner script for safe code execution
-Executes student code and test code, returns results as JSON
-"""
 import sys
 import json
 import traceback
 from io import StringIO
 
 def main():
-    """Execute student and test code safely"""
     result = {
         "success": False,
         "passed": False,
@@ -298,38 +193,21 @@ def main():
     }
     
     try:
-        # Create namespace for execution
         namespace = {}
-        
-        # Capture stdout
-        old_stdout = sys.stdout
-        old_stderr = sys.stderr
-        captured_stdout = StringIO()
-        captured_stderr = StringIO()
-        sys.stdout = captured_stdout
-        sys.stderr = captured_stderr
+        old_stdout, old_stderr = sys.stdout, sys.stderr
+        captured_stdout, captured_stderr = StringIO(), StringIO()
+        sys.stdout, sys.stderr = captured_stdout, captured_stderr
         
         try:
-            # Execute student code
             with open('/sandbox/student_code.py', 'r') as f:
-                student_code = f.read()
-            exec(student_code, namespace)
-            
-            # Execute test code
+                exec(f.read(), namespace)
             with open('/sandbox/test_code.py', 'r') as f:
-                test_code = f.read()
-            exec(test_code, namespace)
-            
+                exec(f.read(), namespace)
         finally:
-            # Restore stdout/stderr
-            sys.stdout = old_stdout
-            sys.stderr = old_stderr
+            sys.stdout, sys.stderr = old_stdout, old_stderr
         
-        # Get captured output
         result["stdout"] = captured_stdout.getvalue()
         result["stderr"] = captured_stderr.getvalue()
-        
-        # Get test results from namespace
         result["success"] = True
         result["passed"] = namespace.get('passed', False)
         result["score"] = namespace.get('score', 0.0)
@@ -342,7 +220,6 @@ def main():
         result["stderr"] = traceback.format_exc()
         result["feedback"] = f"Error during execution: {str(e)}"
     
-    # Output results as JSON
     print("###GRADER_RESULTS###")
     print(json.dumps(result, indent=2))
     print("###GRADER_RESULTS_END###")
@@ -359,19 +236,7 @@ if __name__ == '__main__':
         timeout_occurred: bool,
         execution_time: float
     ) -> ExecutionResult:
-        """
-        Parse execution results from container output
-        
-        Args:
-            stdout: Standard output
-            stderr: Standard error
-            exit_code: Container exit code
-            timeout_occurred: Whether timeout occurred
-            execution_time: Execution time in seconds
-            
-        Returns:
-            ExecutionResult object
-        """
+        """Parse execution results from container output"""
         if timeout_occurred:
             return ExecutionResult(
                 success=False,
@@ -387,7 +252,6 @@ if __name__ == '__main__':
         # Try to extract JSON results
         try:
             if "###GRADER_RESULTS###" in stdout:
-                # Extract JSON between markers
                 start = stdout.find("###GRADER_RESULTS###") + len("###GRADER_RESULTS###")
                 end = stdout.find("###GRADER_RESULTS_END###")
                 
@@ -407,7 +271,6 @@ if __name__ == '__main__':
                         feedback=data.get("feedback", ""),
                         test_results=data.get("test_results", [])
                     )
-        
         except json.JSONDecodeError as e:
             logger.warning(f"Failed to parse results JSON: {e}")
         
@@ -422,12 +285,7 @@ if __name__ == '__main__':
         )
     
     async def _ensure_image_exists(self, image: str):
-        """
-        Ensure Docker image exists, pull if necessary
-        
-        Args:
-            image: Docker image name
-        """
+        """Ensure Docker image exists, pull if necessary"""
         try:
             self.docker_client.images.get(image)
         except NotFound:
@@ -439,19 +297,13 @@ if __name__ == '__main__':
                 logger.error(f"Failed to pull image '{image}': {e}")
                 raise RuntimeError(
                     f"Docker image '{image}' not found and could not be pulled. "
-                    "Please build the image first using 'docker build'."
+                    "Please build the image first."
                 ) from e
     
     async def health_check(self) -> bool:
-        """
-        Check if Docker executor is healthy
-        
-        Returns:
-            True if Docker is available and responsive
-        """
+        """Check if Docker executor is healthy"""
         if not self.docker_client:
             return False
-        
         try:
             self.docker_client.ping()
             return True
@@ -463,13 +315,12 @@ if __name__ == '__main__':
         """Clean up Docker resources"""
         if self.docker_client:
             try:
-                # Remove any dangling containers (shouldn't happen normally)
                 filters = {'label': 'grader=true', 'status': 'exited'}
                 for container in self.docker_client.containers.list(all=True, filters=filters):
                     try:
                         container.remove(force=True)
-                        logger.info(f"Cleaned up dangling container: {container.id[:12]}")
+                        logger.info(f"Cleaned up container: {container.id[:12]}")
                     except Exception as e:
-                        logger.warning(f"Failed to remove container {container.id[:12]}: {e}")
+                        logger.warning(f"Failed to remove container: {e}")
             except Exception as e:
                 logger.error(f"Error during cleanup: {e}")

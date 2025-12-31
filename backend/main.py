@@ -17,11 +17,13 @@ try:
     # Try backend-qualified imports first (when running as module from repo root)
     from backend.routers import teacher, student, auth, admin
     from backend.database import connect_to_mongo, close_mongo_connection
+    from backend.utils.docker_image_builder import ensure_docker_images
 except ModuleNotFoundError:
     # Fall back to relative imports when running directly from backend folder
     sys.path.insert(0, os.path.dirname(__file__))
     from routers import teacher, student, auth, admin
     from database import connect_to_mongo, close_mongo_connection
+    from utils.docker_image_builder import ensure_docker_images
 
 
 @asynccontextmanager
@@ -29,6 +31,7 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown events"""
     # Startup
     await connect_to_mongo()
+    await ensure_docker_images()
     yield
     # Shutdown
     await close_mongo_connection()
