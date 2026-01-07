@@ -300,6 +300,17 @@ async def evaluate_single_cell(
     Returns:
         Dict with score, feedback, and test results
     """
+    # Fetch assignment to get docker_image
+    assignment = await Assignment.get(PydanticObjectId(assignment_id))
+    if not assignment:
+        return {
+            "success": False,
+            "score": 0.0,
+            "max_score": 0.0,
+            "feedback": f"Assignment not found: {assignment_id}",
+            "results": []
+        }
+    
     testcases = await SingleCellTestCase.find(
         SingleCellTestCase.assignment_id == assignment_id,
         SingleCellTestCase.cell_id == cell_id
@@ -318,7 +329,8 @@ async def evaluate_single_cell(
     config = ExecutionConfig(
         timeout=timeout or 10,
         memory_limit="256m",
-        language=ExecutionLanguage.PYTHON
+        language=ExecutionLanguage.PYTHON,
+        docker_image=assignment.docker_image  # Use assignment's docker image
     )
     
     # Execute student code first

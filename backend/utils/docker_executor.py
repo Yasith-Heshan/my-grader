@@ -81,8 +81,8 @@ class DockerExecutor(CodeExecutor):
             test_file.write_text(test_code, encoding='utf-8')
             runner_file.write_text(self._create_runner_script(), encoding='utf-8')
             
-            # Get image and ensure it exists
-            image = ExecutorConfig.get_docker_image(exec_config.language.value)
+            # Get image from config or use default
+            image = exec_config.docker_image or ExecutorConfig.get_docker_image(exec_config.language.value)
             await self._ensure_image_exists(image)
             
             # Create and run container

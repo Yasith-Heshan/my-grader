@@ -30,6 +30,8 @@ class AssignmentCreate(BaseModel):
     questions: List[QuestionCreate] = Field(default_factory=list)
     teacher_id: str
     due_date: Optional[datetime] = None
+    docker_image: str = "grader-python-base:latest"
+    required_packages: List[str] = Field(default_factory=list)
 
 class AssignmentResponse(BaseModel):
     id: str = Field(..., alias="_id")
@@ -40,6 +42,8 @@ class AssignmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     due_date: Optional[datetime]
+    docker_image: str = "grader-python-base:latest"
+    required_packages: List[str] = Field(default_factory=list)
     
     class Config:
         from_attributes = True

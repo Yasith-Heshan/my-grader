@@ -14,6 +14,7 @@ from schemas.test_case import SingleCellTestCaseCreate, SingleCellTestCaseRespon
 from services import assignment_service, grader_service, teacher_service
 from middleware.auth import get_current_teacher
 from models import Teacher
+from config.docker_presets import DOCKER_IMAGE_PRESETS
 
 router = APIRouter()
 
@@ -68,6 +69,12 @@ async def list_teachers_endpoint(skip: int = 0, limit: int = 100):
         return serialize_documents(teachers)
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to list teachers: {str(e)}")
+
+# Docker Image Presets
+@router.get("/docker-presets")
+async def get_docker_presets():
+    """Get available Docker image presets for assignments"""
+    return {"presets": DOCKER_IMAGE_PRESETS}
 
 # Assignment Management
 @router.get("/assignments", response_model=List[AssignmentResponse])

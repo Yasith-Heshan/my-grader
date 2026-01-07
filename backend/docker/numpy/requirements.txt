@@ -1,0 +1,3 @@
+# NumPy & Pandas packages for data analysis
+numpy==1.24.3
+pandas==2.0.2

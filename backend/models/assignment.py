@@ -23,6 +23,8 @@ class Assignment(Document):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     due_date: Optional[datetime] = None
+    docker_image: str = "grader-python-base:latest"  # Docker image for execution
+    required_packages: List[str] = Field(default_factory=list)  # For display only
     
     class Settings:
         name = "assignments"
