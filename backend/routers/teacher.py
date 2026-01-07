@@ -16,10 +16,10 @@ from schemas.custom_docker_image import (
     CustomDockerImageUpdate, DockerImageBuildStatus
 )
 from services import assignment_service, grader_service, teacher_service
-from services.docker_image_builder import DockerImageBuilder
 from middleware.auth import get_current_teacher
 from models import Teacher
 from models.custom_docker_image import CustomDockerImage
+from tasks.docker_tasks import build_and_push_docker_image
 
 router = APIRouter()
 
@@ -321,12 +321,11 @@ async def delete_testcase(testcase_id: str):
 @router.post("/custom-images", response_model=CustomDockerImageResponse, status_code=status.HTTP_201_CREATED)
 async def create_custom_docker_image(
     image_data: CustomDockerImageCreate,
-    background_tasks: BackgroundTasks,
     current_teacher: Teacher = Depends(get_current_teacher)
 ):
     """
     Create and build a custom Docker image with specified packages
-    The image will be built and pushed to Docker Hub in the background
+    The image will be built and pushed to Docker Hub using Celery
     """
     try:
         # Generate full image name
@@ -348,11 +347,9 @@ async def create_custom_docker_image(
         
         await image_record.insert()
         
-        # Build and push in background
-        builder = DockerImageBuilder()
-        background_tasks.add_task(
-            builder.build_and_push,
-            image_record,
+        # Queue Celery task for building and pushing
+        build_and_push_docker_image.delay(
+            str(image_record.id),
             image_data.docker_hub_password
         )
         
