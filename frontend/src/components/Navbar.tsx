@@ -7,6 +7,7 @@ import {
   FileTextOutlined,
   LogoutOutlined,
   UserOutlined,
+  DockerOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -33,6 +34,11 @@ const Navbar: React.FC = () => {
       key: '/teacher/summary',
       icon: <FileTextOutlined />,
       label: <Link to="/teacher/summary">Summary</Link>,
+    },
+    {
+      key: '/teacher/docker-images',
+      icon: <DockerOutlined />,
+      label: <Link to="/teacher/docker-images">Docker Images</Link>,
     },
     {
       key: '/profile',

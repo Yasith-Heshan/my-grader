@@ -25,6 +25,7 @@ async def connect_to_mongo():
         Teacher,
         Student,
         Admin,
+        CustomDockerImage,
     )
 
     mongodb_client = AsyncIOMotorClient(settings.mongodb_url)
@@ -41,6 +42,7 @@ async def connect_to_mongo():
             Teacher,
             Student,
             Admin,
+            CustomDockerImage,
         ],
     )
     print(f"Connected to MongoDB: {settings.database_name}")

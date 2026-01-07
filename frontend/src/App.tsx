@@ -20,6 +20,7 @@ import AssignmentDetail from './pages/AssignmentDetail';
 import AssignmentNotebook from './pages/AssignmentNotebook';
 import NotebookPage from './pages/NotebookPage';
 import LatexDemo from './pages/LatexDemo';
+import CustomDockerImagesPage from './pages/CustomDockerImagesPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 
@@ -116,6 +117,16 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <TeacherSummary />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Custom Docker Images - teachers only */}
+        <Route
+          path="/teacher/docker-images"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <CustomDockerImagesPage />
             </ProtectedRoute>
           }
         />

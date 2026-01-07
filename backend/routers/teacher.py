@@ -1,7 +1,7 @@
 """
 Teacher API routes
 """
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, BackgroundTasks
 from typing import List, Optional
 from beanie import PydanticObjectId, Document
 
@@ -11,9 +11,15 @@ from schemas import (
     TeacherCreate, TeacherResponse
 )
 from schemas.test_case import SingleCellTestCaseCreate, SingleCellTestCaseResponse
+from schemas.custom_docker_image import (
+    CustomDockerImageCreate, CustomDockerImageResponse,
+    CustomDockerImageUpdate, DockerImageBuildStatus
+)
 from services import assignment_service, grader_service, teacher_service
+from services.docker_image_builder import DockerImageBuilder
 from middleware.auth import get_current_teacher
 from models import Teacher
+from models.custom_docker_image import CustomDockerImage
 
 router = APIRouter()
 
@@ -308,3 +314,208 @@ async def delete_testcase(testcase_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to delete testcase: {str(e)}")
+
+
+# ========== CUSTOM DOCKER IMAGE ENDPOINTS ==========
+
+@router.post("/custom-images", response_model=CustomDockerImageResponse, status_code=status.HTTP_201_CREATED)
+async def create_custom_docker_image(
+    image_data: CustomDockerImageCreate,
+    background_tasks: BackgroundTasks,
+    current_teacher: Teacher = Depends(get_current_teacher)
+):
+    """
+    Create and build a custom Docker image with specified packages
+    The image will be built and pushed to Docker Hub in the background
+    """
+    try:
+        # Generate full image name
+        full_image_name = f"{image_data.docker_hub_username}/grader-{image_data.name}:latest"
+        
+        # Create image record
+        image_record = CustomDockerImage(
+            name=image_data.name,
+            description=image_data.description,
+            teacher_id=str(current_teacher.id),
+            teacher_name=current_teacher.name,
+            docker_hub_username=image_data.docker_hub_username,
+            full_image_name=full_image_name,
+            base_image=image_data.base_image,
+            packages=image_data.packages or [],
+            pip_install_commands=image_data.pip_install_commands,
+            status="pending"
+        )
+        
+        await image_record.insert()
+        
+        # Build and push in background
+        builder = DockerImageBuilder()
+        background_tasks.add_task(
+            builder.build_and_push,
+            image_record,
+            image_data.docker_hub_password
+        )
+        
+        return serialize_document(image_record)
+        
+    except RuntimeError as e:
+        # Docker-specific errors
+        error_msg = str(e)
+        if "Docker is not running" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Docker is not running. Please start Docker Desktop and try again."
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_msg
+        )
+    except Exception as e:
+        import traceback
+        print(f"Error creating custom image: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create custom image: {str(e)}"
+        )
+
+
+@router.get("/custom-images", response_model=List[CustomDockerImageResponse])
+async def get_custom_images(
+    current_teacher: Teacher = Depends(get_current_teacher),
+    status_filter: Optional[str] = None
+):
+    """
+    Get all custom Docker images created by the current teacher
+    Optionally filter by status
+    """
+    try:
+        query = {"teacher_id": str(current_teacher.id)}
+        
+        if status_filter:
+            query["status"] = status_filter
+        
+        images = await CustomDockerImage.find(query).to_list()
+        return serialize_documents(images)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get custom images: {str(e)}"
+        )
+
+
+@router.get("/custom-images/{image_id}", response_model=CustomDockerImageResponse)
+async def get_custom_image(
+    image_id: str,
+    current_teacher: Teacher = Depends(get_current_teacher)
+):
+    """Get a specific custom Docker image by ID"""
+    try:
+        image = await CustomDockerImage.get(PydanticObjectId(image_id))
+        
+        if not image:
+            raise HTTPException(status_code=404, detail="Custom image not found")
+        
+        # Check ownership
+        if image.teacher_id != str(current_teacher.id):
+            raise HTTPException(status_code=403, detail="Not authorized to access this image")
+        
+        return serialize_document(image)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get custom image: {str(e)}"
+        )
+
+
+@router.delete("/custom-images/{image_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_custom_image(
+    image_id: str,
+    current_teacher: Teacher = Depends(get_current_teacher)
+):
+    """Delete a custom Docker image"""
+    try:
+        image = await CustomDockerImage.get(PydanticObjectId(image_id))
+        
+        if not image:
+            raise HTTPException(status_code=404, detail="Custom image not found")
+        
+        # Check ownership
+        if image.teacher_id != str(current_teacher.id):
+            raise HTTPException(status_code=403, detail="Not authorized to delete this image")
+        
+        # Check if image is in use
+        if image.usage_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot delete image: it is used by {image.usage_count} assignment(s)"
+            )
+        
+        # Delete local image if it exists
+        try:
+            builder = DockerImageBuilder()
+            await builder.delete_image(image.full_image_name)
+        except:
+            pass  # Ignore if image doesn't exist locally
+        
+        # Delete from database
+        await image.delete()
+        
+        return None
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete custom image: {str(e)}"
+        )
+
+
+@router.post("/custom-images/{image_id}/rebuild", response_model=CustomDockerImageResponse)
+async def rebuild_custom_image(
+    image_id: str,
+    docker_hub_password: str,
+    background_tasks: BackgroundTasks,
+    current_teacher: Teacher = Depends(get_current_teacher)
+):
+    """
+    Rebuild and re-upload a custom Docker image
+    Useful when packages need to be updated
+    """
+    try:
+        image = await CustomDockerImage.get(PydanticObjectId(image_id))
+        
+        if not image:
+            raise HTTPException(status_code=404, detail="Custom image not found")
+        
+        # Check ownership
+        if image.teacher_id != str(current_teacher.id):
+            raise HTTPException(status_code=403, detail="Not authorized to rebuild this image")
+        
+        # Reset status
+        image.status = "pending"
+        image.build_error = None
+        await image.save()
+        
+        # Build and push in background
+        builder = DockerImageBuilder()
+        background_tasks.add_task(
+            builder.build_and_push,
+            image,
+            docker_hub_password
+        )
+        
+        return serialize_document(image)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to rebuild custom image: {str(e)}"
+        )
