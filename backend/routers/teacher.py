@@ -92,6 +92,16 @@ async def create_assignment(
 ):
     """Create a new assignment"""
     try:
+        # Validate custom Docker image if specified
+        if assignment.custom_docker_image_id:
+            custom_image = await CustomDockerImage.get(PydanticObjectId(assignment.custom_docker_image_id))
+            if not custom_image:
+                raise ValueError("Custom Docker image not found")
+            if custom_image.teacher_id != str(teacher.id):
+                raise ValueError("You can only use your own custom Docker images")
+            if custom_image.status != "uploaded":
+                raise ValueError(f"Custom Docker image is not ready (status: {custom_image.status})")
+        
         result = await assignment_service.create_assignment(assignment)
         return serialize_document(result)
     except ValueError as e:
@@ -101,12 +111,38 @@ async def create_assignment(
 
 @router.get("/assignments/{assignment_id}", response_model=AssignmentResponse)
 async def get_assignment(assignment_id: str):
-    """Get assignment by ID"""
+    """Get assignment by ID with Docker image details"""
     try:
         assignment = await assignment_service.get_assignment(assignment_id)
         if not assignment:
             raise HTTPException(status_code=404, detail="Assignment not found")
-        return assignment
+        
+        # Fetch Docker image details if custom image is used
+        docker_image = None
+        if assignment.custom_docker_image_id:
+            from models.custom_docker_image import CustomDockerImage
+            custom_image = await CustomDockerImage.get(PydanticObjectId(assignment.custom_docker_image_id))
+            if custom_image:
+                from schemas.assignment import DockerImageResponse
+                docker_image = DockerImageResponse(
+                    _id=str(custom_image.id),
+                    name=custom_image.name,
+                    description=custom_image.description,
+                    docker_hub_username=custom_image.docker_hub_username,
+                    full_image_name=custom_image.full_image_name,
+                    base_image=custom_image.base_image,
+                    packages=custom_image.packages,
+                    status=custom_image.status,
+                    size_mb=custom_image.size_mb,
+                    created_at=custom_image.created_at
+                )
+        
+        # Convert assignment to dict and add docker_image
+        assignment_dict = assignment.model_dump()
+        assignment_dict["_id"] = str(assignment.id)
+        assignment_dict["docker_image"] = docker_image.model_dump(by_alias=True) if docker_image else None
+        
+        return assignment_dict
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except HTTPException:

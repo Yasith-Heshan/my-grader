@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Layout, Card, Button, Space, Table, Modal, Typography, Spin, Empty, Tabs, Dropdown } from 'antd';
-import { PlusOutlined, EyeOutlined, DeleteOutlined, UserOutlined } from '@ant-design/icons';
+import { PlusOutlined, EyeOutlined, DeleteOutlined, UserOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAssignments, useDeleteAssignment, useCreateAssignment } from '../hooks/useAssignments';
@@ -85,6 +85,12 @@ const TeacherDashboard: React.FC = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
+          <Button
+            icon={<InfoCircleOutlined />}
+            onClick={() => navigate(`/teacher/assignments/${record.id}`)}
+          >
+            View Details
+          </Button>
           <Button
             type="primary"
             icon={<EyeOutlined />}

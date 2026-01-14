@@ -1,5 +1,18 @@
 import axiosInstance from './axiosInstance';
 
+export interface DockerImage {
+  id: string;
+  name: string;
+  description: string;
+  docker_hub_username: string;
+  full_image_name: string;
+  base_image: string;
+  packages: string[];
+  status: string;
+  size_mb?: number;
+  created_at: string;
+}
+
 export interface Question {
   question_number: number;
   title: string;
@@ -19,6 +32,8 @@ export interface Assignment {
   created_at: string;
   updated_at: string;
   due_date: string;
+  custom_docker_image_id?: string | null;
+  docker_image?: DockerImage | null;
 }
 
 export interface TestCase {
@@ -35,6 +50,7 @@ export interface CreateAssignmentDTO {
   questions: Question[];
   teacher_id: string;
   due_date: string;
+  custom_docker_image_id?: string | null;
 }
 
 // Helper to normalize assignment response
@@ -58,15 +74,9 @@ export const assignmentApi = {
 
   // Get assignment by ID (works for both teacher and student)
   getById: async (id: string): Promise<Assignment> => {
-    // Try student endpoint first (works for both roles)
-    try {
-      const response = await axiosInstance.get(`/api/student/assignments/${id}`);
-      return normalizeAssignment(response.data);
-    } catch (error) {
-      // Fallback to teacher endpoint if student endpoint fails
-      const response = await axiosInstance.get(`/api/teacher/assignments/${id}`);
-      return normalizeAssignment(response.data);
-    }
+    // Use teacher endpoint which includes docker_image details
+    const response = await axiosInstance.get(`/api/teacher/assignments/${id}`);
+    return normalizeAssignment(response.data);
   },
 
   // Create new assignment (Teacher only)

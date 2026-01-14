@@ -1,0 +1,33 @@
+{
+    "title": "NumPy Array Operations",
+    "description": "# NumPy Assignment\n\nThis assignment tests your understanding of NumPy array operations.\n\n## Requirements\n- Create and manipulate NumPy arrays\n- Perform mathematical operations\n- Use array indexing and slicing\n\n**Note:** This assignment uses a custom Docker image with NumPy pre-installed.",
+    "questions": [
+        {
+            "question_number": 1,
+            "title": "Create a NumPy Array",
+            "description": "Create a NumPy array containing integers from 1 to 10.\n\n**Expected output:**\n```python\narray([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\n```",
+            "cell_id": "cell_1",
+            "points": 10,
+            "starter_code": "import numpy as np\n\n# Create array from 1 to 10\narray = None\nprint(array)"
+        },
+        {
+            "question_number": 2,
+            "title": "Array Reshaping",
+            "description": "Create a 3x3 matrix with values from 1 to 9.\n\n**Expected output:**\n```python\narray([[1, 2, 3],\n       [4, 5, 6],\n       [7, 8, 9]])\n```",
+            "cell_id": "cell_2",
+            "points": 15,
+            "starter_code": "import numpy as np\n\n# Create 3x3 matrix\nmatrix = None\nprint(matrix)"
+        },
+        {
+            "question_number": 3,
+            "title": "Matrix Operations",
+            "description": "Calculate the mean, sum, and standard deviation of a given array.\n\n**Example:**\n```python\narr = np.array([1, 2, 3, 4, 5])\nmean = ?  # Should be 3.0\nsum = ?   # Should be 15\nstd = ?   # Should be ~1.41\n```",
+            "cell_id": "cell_3",
+            "points": 15,
+            "starter_code": "import numpy as np\n\narr = np.array([10, 20, 30, 40, 50])\n\n# Calculate statistics\nmean = None\nsum_val = None\nstd = None\n\nprint(f\"Mean: {mean}\")\nprint(f\"Sum: {sum_val}\")\nprint(f\"Std: {std}\")"
+        }
+    ],
+    "teacher_id": "REPLACE_WITH_TEACHER_ID",
+    "due_date": "2026-02-15T23:59:59.000Z",
+    "custom_docker_image_id": "REPLACE_WITH_DOCKER_IMAGE_ID"
+}

@@ -29,6 +29,7 @@ class ExecutionConfig:
     allowed_imports: Optional[List[str]] = None  # Whitelist of allowed imports
     max_output_size: int = 10240  # Maximum output in bytes (10KB)
     working_dir: str = "/sandbox"
+    custom_image: Optional[str] = None  # Custom Docker image name (e.g., "username/image:tag")
     
     def __post_init__(self):
         """Validate configuration"""

@@ -20,6 +20,7 @@ class Assignment(Document):
     description: Optional[str] = None
     questions: List[Question] = Field(default_factory=list)
     teacher_id: Indexed(str)  # Reference to Teacher document ID
+    custom_docker_image_id: Optional[str] = None  # Link to CustomDockerImage
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     due_date: Optional[datetime] = None

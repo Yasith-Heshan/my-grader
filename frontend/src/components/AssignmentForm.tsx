@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, Card, DatePicker, Space, Typography, Divider, Alert } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Form, Input, Button, Card, DatePicker, Space, Typography, Divider, Alert, Select, Spin, Tooltip } from 'antd';
+import { PlusOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { CreateAssignmentDTO } from '../api/assignmentApi';
 import { useAuth } from '../context/AuthContext';
 import QuestionForm, { QuestionData } from './QuestionForm';
+import { dockerImageApi, CustomDockerImage } from '../api/dockerImageApi';
 
 const { TextArea } = Input;
 const { Title } = Typography;
+const { Option } = Select;
 
 interface AssignmentFormProps {
   onSubmit: (values: CreateAssignmentDTO) => void;
@@ -22,6 +24,25 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
   const [form] = Form.useForm();
   const { user } = useAuth();
   const [questions, setQuestions] = useState<QuestionData[]>([]);
+  const [dockerImages, setDockerImages] = useState<CustomDockerImage[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+
+  // Fetch uploaded Docker images
+  useEffect(() => {
+    const fetchDockerImages = async () => {
+      setLoadingImages(true);
+      try {
+        const images = await dockerImageApi.getUploaded();
+        setDockerImages(images);
+      } catch (error) {
+        console.error('Failed to fetch Docker images:', error);
+      } finally {
+        setLoadingImages(false);
+      }
+    };
+
+    fetchDockerImages();
+  }, []);
 
   const handleAddQuestion = () => {
     const questionNumber = questions.length + 1;
@@ -77,6 +98,7 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
       questions: questions,
       teacher_id: user?.id || 'mock-teacher-id',
       due_date: values.due_date.toISOString(),
+      custom_docker_image_id: values.custom_docker_image_id || null,
     };
     onSubmit(formattedValues);
   };
@@ -114,6 +136,42 @@ const AssignmentForm: React.FC<AssignmentFormProps> = ({
           rules={[{ required: true, message: 'Please select due date' }]}
         >
           <DatePicker showTime style={{ width: '100%' }} />
+        </Form.Item>
+
+        <Form.Item
+          name="custom_docker_image_id"
+          label={
+            <Space>
+              <span>Docker Image</span>
+              <Tooltip title="Select a custom Docker image with pre-installed packages. Leave empty to use the default Python image.">
+                <InfoCircleOutlined />
+              </Tooltip>
+            </Space>
+          }
+        >
+          <Select
+            placeholder="Use Default Python Image"
+            allowClear
+            loading={loadingImages}
+            notFoundContent={loadingImages ? <Spin size="small" /> : 'No custom images available'}
+            style={{ width: '100%' }}
+          >
+            {dockerImages.map((image) => (
+              <Option key={image.id} value={image.id}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <strong>{image.name}</strong>
+                    <div style={{ fontSize: '12px', color: '#888' }}>
+                      {image.description || 'No description'}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#666' }}>
+                    Base: {image.base_image}
+                  </div>
+                </div>
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
 
         <Divider />

@@ -5,6 +5,23 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime
 
+class DockerImageResponse(BaseModel):
+    """Docker image details for assignment response"""
+    id: str = Field(..., alias="_id")
+    name: str
+    description: str
+    docker_hub_username: str
+    full_image_name: str
+    base_image: str
+    packages: List[str]
+    status: str
+    size_mb: Optional[float] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+        populate_by_name = True
+
 class QuestionCreate(BaseModel):
     question_number: int
     title: str = Field(..., min_length=1)
@@ -30,6 +47,7 @@ class AssignmentCreate(BaseModel):
     questions: List[QuestionCreate] = Field(default_factory=list)
     teacher_id: str
     due_date: Optional[datetime] = None
+    custom_docker_image_id: Optional[str] = None  # Link to CustomDockerImage
 
 class AssignmentResponse(BaseModel):
     id: str = Field(..., alias="_id")
@@ -40,6 +58,8 @@ class AssignmentResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     due_date: Optional[datetime]
+    custom_docker_image_id: Optional[str] = None
+    docker_image: Optional[DockerImageResponse] = None  # Include full Docker image details
     
     class Config:
         from_attributes = True

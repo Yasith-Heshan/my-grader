@@ -21,6 +21,7 @@ import AssignmentNotebook from './pages/AssignmentNotebook';
 import NotebookPage from './pages/NotebookPage';
 import LatexDemo from './pages/LatexDemo';
 import CustomDockerImagesPage from './pages/CustomDockerImagesPage';
+import TeacherAssignmentDetails from './pages/TeacherAssignmentDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from './pages/NotFound';
 
@@ -51,6 +52,14 @@ const AppContent: React.FC = () => {
           element={
             <ProtectedRoute allowedRoles={['teacher']}>
               <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/teacher/assignments/:id"
+          element={
+            <ProtectedRoute allowedRoles={['teacher']}>
+              <TeacherAssignmentDetails />
             </ProtectedRoute>
           }
         />

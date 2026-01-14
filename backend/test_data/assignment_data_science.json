@@ -1,0 +1,33 @@
+{
+    "title": "Data Science with Pandas",
+    "description": "# Data Science Assignment\n\nWork with Pandas DataFrames to analyze and manipulate data.\n\n## Prerequisites\n- This assignment requires **NumPy and Pandas**\n- Select the \"NumPy Scientific Computing\" Docker image when creating this assignment\n\n## Topics Covered\n- Creating DataFrames\n- Data filtering\n- Statistical analysis\n\n**Note:** Make sure to select a custom Docker image with Pandas installed!",
+    "questions": [
+        {
+            "question_number": 1,
+            "title": "Create a DataFrame",
+            "description": "Create a Pandas DataFrame with the following data:\n\n| Name  | Age | Score |\n|-------|-----|-------|\n| Alice | 25  | 85    |\n| Bob   | 30  | 90    |\n| Carol | 22  | 78    |\n\nStore it in a variable called `df` and print it.",
+            "cell_id": "cell_1",
+            "points": 15,
+            "starter_code": "import pandas as pd\n\n# Create DataFrame\ndata = {\n    'Name': [],\n    'Age': [],\n    'Score': []\n}\n\ndf = pd.DataFrame(data)\nprint(df)"
+        },
+        {
+            "question_number": 2,
+            "title": "Filter Data",
+            "description": "Filter the DataFrame to show only people with Score >= 80. Store the result in `high_scorers`.",
+            "cell_id": "cell_2",
+            "points": 15,
+            "starter_code": "import pandas as pd\n\n# Assuming df exists from previous question\ndf = pd.DataFrame({\n    'Name': ['Alice', 'Bob', 'Carol'],\n    'Age': [25, 30, 22],\n    'Score': [85, 90, 78]\n})\n\n# Filter for high scorers\nhigh_scorers = None\n\nprint(high_scorers)"
+        },
+        {
+            "question_number": 3,
+            "title": "Calculate Statistics",
+            "description": "Calculate the mean, median, and standard deviation of the Score column.\n\nStore them in variables: `mean_score`, `median_score`, `std_score`",
+            "cell_id": "cell_3",
+            "points": 20,
+            "starter_code": "import pandas as pd\nimport numpy as np\n\ndf = pd.DataFrame({\n    'Name': ['Alice', 'Bob', 'Carol'],\n    'Age': [25, 30, 22],\n    'Score': [85, 90, 78]\n})\n\n# Calculate statistics\nmean_score = None\nmedian_score = None\nstd_score = None\n\nprint(f\"Mean: {mean_score}\")\nprint(f\"Median: {median_score}\")\nprint(f\"Std Dev: {std_score}\")"
+        }
+    ],
+    "teacher_id": "REPLACE_WITH_TEACHER_ID",
+    "due_date": "2026-02-25T23:59:59.000Z",
+    "custom_docker_image_id": "REPLACE_WITH_NUMPY_IMAGE_ID"
+}

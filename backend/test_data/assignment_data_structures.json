@@ -1,0 +1,32 @@
+{
+    "title": "Lists and Dictionaries",
+    "description": "# Data Structures\n\nPractice working with Python's built-in data structures.\n\n## Topics\n- List operations\n- Dictionary manipulation\n- List comprehensions\n- Nested structures",
+    "questions": [
+        {
+            "question_number": 1,
+            "title": "List Operations",
+            "description": "Create a list called `fruits` with: apple, banana, orange, grape.\n\nThen:\n1. Add \"mango\" to the end\n2. Remove \"banana\"\n3. Print the final list",
+            "cell_id": "cell_1",
+            "points": 10,
+            "starter_code": "# Create and modify list\nfruits = []\n\n# Your operations here\n\nprint(fruits)"
+        },
+        {
+            "question_number": 2,
+            "title": "Dictionary Creation",
+            "description": "Create a dictionary called `student` with:\n- name: \"John Doe\"\n- age: 20\n- major: \"Computer Science\"\n- gpa: 3.8\n\nPrint the student's name and GPA.",
+            "cell_id": "cell_2",
+            "points": 10,
+            "starter_code": "# Create dictionary\nstudent = {}\n\nprint(f\"Name: {student['name']}\")\nprint(f\"GPA: {student['gpa']}\")"
+        },
+        {
+            "question_number": 3,
+            "title": "List Comprehension",
+            "description": "Given a list of numbers, create a new list containing only the squares of even numbers.\n\n**Example:**\n```python\nnumbers = [1, 2, 3, 4, 5, 6]\nsquares = [4, 16, 36]  # 2², 4², 6²\n```\n\nUse list comprehension!",
+            "cell_id": "cell_3",
+            "points": 15,
+            "starter_code": "numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\n\n# Create list of squares of even numbers\nsquares = []\n\nprint(squares)"
+        }
+    ],
+    "teacher_id": "REPLACE_WITH_TEACHER_ID",
+    "due_date": "2026-02-18T23:59:59.000Z"
+}

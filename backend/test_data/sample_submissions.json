@@ -1,0 +1,122 @@
+[
+    {
+        "assignment_title": "Circle Area Calculation",
+        "student_email": "student1@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "import math\n\ndef calculate_circle_area(radius):\n    return math.pi * radius ** 2\n\n# Test\nradius = 5\narea = calculate_circle_area(radius)\nprint(f\"Area of circle with radius {radius} is {area:.2f}\")",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Perfect implementation using math.pi"
+    },
+    {
+        "assignment_title": "Circle Area Calculation",
+        "student_email": "student2@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def calculate_circle_area(radius):\n    pi = 3.14159\n    return pi * radius * radius\n\nradius = 5\narea = calculate_circle_area(radius)\nprint(f\"Area: {area}\")",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Correct but uses approximation of pi"
+    },
+    {
+        "assignment_title": "Circle Area Calculation",
+        "student_email": "student3@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def calculate_circle_area(radius):\n    return 2 * 3.14159 * radius\n\nradius = 5\narea = calculate_circle_area(radius)\nprint(f\"Area: {area}\")",
+        "status": "incorrect",
+        "points_earned": 0,
+        "notes": "Wrong formula - calculated circumference instead of area"
+    },
+    {
+        "assignment_title": "Circle Area Calculation",
+        "student_email": "student4@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def calculate_circle_area(radius):\n    area = math.pi * radius ** 2\n    return area\n\nradius = 5\nprint(calculate_circle_area(radius))",
+        "status": "error",
+        "points_earned": 0,
+        "notes": "NameError: name 'math' is not defined - forgot to import math"
+    },
+    {
+        "assignment_title": "Circle Area Calculation",
+        "student_email": "student5@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "import math\n\ndef calculate_circle_area(radius):\n    if radius < 0:\n        return 0\n    return math.pi * radius ** 2\n\ntest_cases = [5, 10, 3.5, -2]\nfor r in test_cases:\n    print(f\"Radius {r}: Area = {calculate_circle_area(r):.2f}\")",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Excellent - includes validation and multiple test cases"
+    },
+    {
+        "assignment_title": "Add Two Numbers",
+        "student_email": "student1@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def add_two_numbers(a, b):\n    return a + b\n\nresult = add_two_numbers(5, 3)\nprint(result)",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Perfect"
+    },
+    {
+        "assignment_title": "Factorial Calculator",
+        "student_email": "student2@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def factorial(n):\n    if n == 0 or n == 1:\n        return 1\n    result = 1\n    for i in range(2, n + 1):\n        result *= i\n    return result\n\nprint(factorial(5))\nprint(factorial(3))",
+        "status": "correct",
+        "points_earned": 15,
+        "notes": "Correct iterative implementation"
+    },
+    {
+        "assignment_title": "Factorial Calculator",
+        "student_email": "student3@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def factorial(n):\n    if n <= 1:\n        return 1\n    return n * factorial(n - 1)\n\nprint(factorial(5))",
+        "status": "correct",
+        "points_earned": 15,
+        "notes": "Correct recursive implementation"
+    },
+    {
+        "assignment_title": "Even Number Filter",
+        "student_email": "student1@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def filter_even_numbers(numbers):\n    return [num for num in numbers if num % 2 == 0]\n\ntest_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\nresult = filter_even_numbers(test_list)\nprint(result)",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Excellent use of list comprehension"
+    },
+    {
+        "assignment_title": "Grade Calculator",
+        "student_email": "student2@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "def calculate_grade(score):\n    if score >= 90:\n        return 'A'\n    elif score >= 80:\n        return 'B'\n    elif score >= 70:\n        return 'C'\n    elif score >= 60:\n        return 'D'\n    else:\n        return 'F'\n\nprint(calculate_grade(95))\nprint(calculate_grade(82))\nprint(calculate_grade(65))",
+        "status": "correct",
+        "points_earned": 15,
+        "notes": "Perfect implementation"
+    },
+    {
+        "assignment_title": "NumPy Array Creation",
+        "student_email": "student1@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "import numpy as np\n\narray = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])\nprint(array)",
+        "status": "correct",
+        "points_earned": 10,
+        "notes": "Correct NumPy array creation"
+    },
+    {
+        "assignment_title": "Pandas DataFrame",
+        "student_email": "student2@example.com",
+        "question_number": 1,
+        "cell_id": "cell_1",
+        "submitted_code": "import pandas as pd\n\ndata = {\n    'Name': ['Alice', 'Bob', 'Carol'],\n    'Age': [25, 30, 22],\n    'Score': [85, 90, 78]\n}\n\ndf = pd.DataFrame(data)\nprint(df)",
+        "status": "correct",
+        "points_earned": 15,
+        "notes": "Correct DataFrame creation"
+    }
+]

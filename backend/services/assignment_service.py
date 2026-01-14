@@ -29,7 +29,8 @@ async def create_assignment(assignment: AssignmentCreate) -> Assignment:
         description=assignment.description,
         questions=questions,
         teacher_id=assignment.teacher_id,
-        due_date=assignment.due_date
+        due_date=assignment.due_date,
+        custom_docker_image_id=assignment.custom_docker_image_id
     )
     await db_assignment.insert()
     return db_assignment

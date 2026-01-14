@@ -1,0 +1,76 @@
+[
+    {
+        "name": "NumPy Scientific Computing",
+        "description": "Python environment with NumPy, Pandas, and SciPy for data science assignments",
+        "base_image": "python:3.11-slim",
+        "packages": [
+            "numpy",
+            "pandas",
+            "scipy",
+            "matplotlib"
+        ],
+        "pip_install_commands": null,
+        "docker_hub_tag": "yourusername/grader-numpy-scipy:latest",
+        "status": "uploaded",
+        "teacher_id": "REPLACE_WITH_TEACHER_ID",
+        "build_logs": "Build completed successfully",
+        "error_message": null
+    },
+    {
+        "name": "Machine Learning Environment",
+        "description": "Complete ML setup with scikit-learn, TensorFlow, and visualization tools",
+        "base_image": "python:3.11-slim",
+        "packages": [
+            "scikit-learn",
+            "tensorflow",
+            "seaborn",
+            "plotly"
+        ],
+        "pip_install_commands": null,
+        "docker_hub_tag": "yourusername/grader-ml-env:latest",
+        "status": "uploaded",
+        "teacher_id": "REPLACE_WITH_TEACHER_ID",
+        "build_logs": "Build completed successfully",
+        "error_message": null
+    },
+    {
+        "name": "Web Scraping Tools",
+        "description": "Tools for web scraping assignments - BeautifulSoup, Requests, Selenium",
+        "base_image": "python:3.11-alpine",
+        "packages": [],
+        "pip_install_commands": "pip install beautifulsoup4 requests selenium lxml",
+        "docker_hub_tag": "yourusername/grader-webscraping:latest",
+        "status": "uploaded",
+        "teacher_id": "REPLACE_WITH_TEACHER_ID",
+        "build_logs": "Build completed successfully",
+        "error_message": null
+    },
+    {
+        "name": "Django Web Development",
+        "description": "Django framework with REST framework and database tools",
+        "base_image": "python:3.11",
+        "packages": [
+            "django",
+            "djangorestframework",
+            "psycopg2-binary"
+        ],
+        "pip_install_commands": null,
+        "docker_hub_tag": "yourusername/grader-django:latest",
+        "status": "uploaded",
+        "teacher_id": "REPLACE_WITH_TEACHER_ID",
+        "build_logs": "Build completed successfully",
+        "error_message": null
+    },
+    {
+        "name": "Data Visualization Suite",
+        "description": "Complete visualization toolkit - Matplotlib, Seaborn, Plotly, Bokeh",
+        "base_image": "python:3.11-slim",
+        "packages": [],
+        "pip_install_commands": "pip install matplotlib seaborn plotly bokeh pandas numpy",
+        "docker_hub_tag": "yourusername/grader-dataviz:latest",
+        "status": "uploaded",
+        "teacher_id": "REPLACE_WITH_TEACHER_ID",
+        "build_logs": "Build completed successfully",
+        "error_message": null
+    }
+]

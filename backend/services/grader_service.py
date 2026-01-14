@@ -5,20 +5,28 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 from beanie import PydanticObjectId
 import json
+import logging
 
-from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment, SingleCellTestCase
+from models import Submission, SubmissionItem, TestCase, GradeStatus, Student, Assignment, SingleCellTestCase, CustomDockerImage
 from schemas import GradingResult, SubmissionItemResponse, StudentResult, AssignmentSummary
 from utils.executor_factory import ExecutorFactory
 from utils.executor_interface import ExecutionConfig, ExecutionLanguage
 
-async def grade_single_cell(test_case: TestCase, submission_item: SubmissionItem) -> Dict[str, Any]:
+logger = logging.getLogger(__name__)
+
+async def grade_single_cell(
+    test_case: TestCase, 
+    submission_item: SubmissionItem,
+    custom_docker_image_name: Optional[str] = None
+) -> Dict[str, Any]:
     """Grade a single cell submission against a test case using Docker executor"""
     try:
         executor = await ExecutorFactory.get_default_executor()
         config = ExecutionConfig(
             timeout=10,
             memory_limit="256m",
-            language=ExecutionLanguage.PYTHON
+            language=ExecutionLanguage.PYTHON,
+            custom_image=custom_docker_image_name  # Use custom image if provided
         )
         
         # Execute student code with test code in Docker
@@ -67,6 +75,16 @@ async def grade_submission(submission_id: str) -> GradingResult:
     if not submission:
         raise ValueError(f"Submission {submission_id} not found")
     
+    # Get assignment to check for custom Docker image
+    assignment = await Assignment.get(PydanticObjectId(submission.assignment_id))
+    custom_image_name = None
+    
+    if assignment and assignment.custom_docker_image_id:
+        custom_image = await CustomDockerImage.get(PydanticObjectId(assignment.custom_docker_image_id))
+        if custom_image and custom_image.status == "uploaded":
+            custom_image_name = custom_image.docker_hub_tag
+            logger.info(f"Using custom image for grading: {custom_image_name}")
+    
     # Update status to grading
     submission.status = GradeStatus.GRADING
     await submission.save()
@@ -93,7 +111,8 @@ async def grade_submission(submission_id: str) -> GradingResult:
                 assignment_id=submission.assignment_id,
                 cell_id=testcase.cell_id,
                 student_code=submission.code,
-                timeout=testcase.timeout
+                timeout=testcase.timeout,
+                custom_docker_image_name=custom_image_name  # Pass custom image
             )
             total_score += result.get('score', 0.0)
             max_score += result.get('max_score', 0.0)
@@ -286,7 +305,8 @@ async def evaluate_single_cell(
     assignment_id: str,
     cell_id: str,
     student_code: str,
-    timeout: Optional[int] = None
+    timeout: Optional[int] = None,
+    custom_docker_image_name: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Evaluate student code against test cases using Docker executor
@@ -296,6 +316,7 @@ async def evaluate_single_cell(
         cell_id: Cell identifier  
         student_code: Student's submitted code
         timeout: Optional timeout override
+        custom_docker_image_name: Optional custom Docker image to use
         
     Returns:
         Dict with score, feedback, and test results
@@ -318,7 +339,8 @@ async def evaluate_single_cell(
     config = ExecutionConfig(
         timeout=timeout or 10,
         memory_limit="256m",
-        language=ExecutionLanguage.PYTHON
+        language=ExecutionLanguage.PYTHON,
+        custom_image=custom_docker_image_name  # Use custom image if provided
     )
     
     # Execute student code first
