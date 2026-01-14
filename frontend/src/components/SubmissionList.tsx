@@ -24,7 +24,8 @@ const SubmissionList: React.FC<SubmissionListProps> = ({
       title: 'Student',
       dataIndex: 'student_name',
       key: 'student_name',
-      sorter: (a, b) => a.student_name.localeCompare(b.student_name),
+      render: (name: string, record: any) => name || record.student_id || 'Unknown',
+      sorter: (a, b) => (a.student_name || a.student_id || '').localeCompare(b.student_name || b.student_id || ''),
     },
     {
       title: 'Submitted At',
@@ -35,34 +36,49 @@ const SubmissionList: React.FC<SubmissionListProps> = ({
     },
     {
       title: 'Status',
-      key: 'graded',
-      dataIndex: 'graded',
-      render: (graded: boolean) => (
-        <Tag color={graded ? 'green' : 'orange'} icon={graded ? <CheckCircleOutlined /> : <SyncOutlined spin />}>
-          {graded ? 'Graded' : 'Pending'}
-        </Tag>
-      ),
+      key: 'status',
+      render: (_, record: any) => {
+        // Handle both 'graded' boolean and 'status' string
+        const isGraded = record.graded === true || record.status === 'completed';
+        return (
+          <Tag color={isGraded ? 'green' : 'orange'} icon={isGraded ? <CheckCircleOutlined /> : <SyncOutlined spin />}>
+            {isGraded ? 'Graded' : 'Pending'}
+          </Tag>
+        );
+      },
       filters: [
         { text: 'Graded', value: true },
         { text: 'Pending', value: false },
       ],
-      onFilter: (value, record) => record.graded === value,
+      onFilter: (value, record: any) => {
+        const isGraded = record.graded === true || record.status === 'completed';
+        return isGraded === value;
+      },
     },
     {
       title: 'Score',
       key: 'score',
-      render: (_, record) =>
-        record.graded && record.score !== undefined
-          ? `${record.score}/${record.max_score}`
-          : 'N/A',
-      sorter: (a, b) => (a.score || 0) - (b.score || 0),
+      render: (_, record: any) => {
+        const isGraded = record.graded === true || record.status === 'completed';
+        const score = record.score ?? record.total_score ?? 0;
+        const maxScore = record.max_score ?? 0;
+        return isGraded 
+          ? `${score.toFixed(1)}/${maxScore.toFixed(1)}`
+          : 'N/A';
+      },
+      sorter: (a: any, b: any) => {
+        const scoreA = a.score ?? a.total_score ?? 0;
+        const scoreB = b.score ?? b.total_score ?? 0;
+        return scoreA - scoreB;
+      },
     },
     {
       title: 'Pass Rate',
       key: 'pass_rate',
-      render: (_, record) => {
-        if (!record.graded || !record.test_results) return 'N/A';
-        const passed = record.test_results.filter((t) => t.passed).length;
+      render: (_, record: any) => {
+        const isGraded = record.graded === true || record.status === 'completed';
+        if (!isGraded || !record.test_results) return 'N/A';
+        const passed = record.test_results.filter((t: any) => t.passed).length;
         const total = record.test_results.length;
         const percentage = Math.round((passed / total) * 100);
         return (
@@ -78,25 +94,28 @@ const SubmissionList: React.FC<SubmissionListProps> = ({
     columns.push({
       title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <Space>
-          {onView && (
-            <Button type="link" onClick={() => onView(record)}>
-              View
-            </Button>
-          )}
-          {onGrade && !record.graded && (
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => onGrade(record.id)}
-              icon={<SyncOutlined />}
-            >
-              Grade
-            </Button>
-          )}
-        </Space>
-      ),
+      render: (_, record: any) => {
+        const isGraded = record.graded === true || record.status === 'completed';
+        return (
+          <Space>
+            {onView && (
+              <Button type="link" onClick={() => onView(record)}>
+                View
+              </Button>
+            )}
+            {onGrade && !isGraded && (
+              <Button
+                type="primary"
+                size="small"
+                onClick={() => onGrade(record.id)}
+                icon={<SyncOutlined />}
+              >
+                Grade
+              </Button>
+            )}
+          </Space>
+        );
+      },
     });
   }
 
