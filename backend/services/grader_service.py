@@ -82,7 +82,7 @@ async def grade_submission(submission_id: str) -> GradingResult:
     if assignment and assignment.custom_docker_image_id:
         custom_image = await CustomDockerImage.get(PydanticObjectId(assignment.custom_docker_image_id))
         if custom_image and custom_image.status == "uploaded":
-            custom_image_name = custom_image.docker_hub_tag
+            custom_image_name = custom_image.full_image_name
             logger.info(f"Using custom image for grading: {custom_image_name}")
     
     # Update status to grading
@@ -388,7 +388,8 @@ except Exception as e:
             test_config = ExecutionConfig(
                 timeout=timeout or testcase.timeout,
                 memory_limit="256m",
-                language=ExecutionLanguage.PYTHON
+                language=ExecutionLanguage.PYTHON,
+                custom_image=custom_docker_image_name  # Use same custom image
             )
             
             test_result = await executor.execute(

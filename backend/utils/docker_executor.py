@@ -173,10 +173,15 @@ class DockerExecutor(CodeExecutor):
             'tmpfs': {'/tmp': 'size=10M,mode=1777'},
             'security_opt': ['no-new-privileges'],
             'cap_drop': ['ALL'],
-            'user': 'sandbox',
         }
         
+        # Only set user for default images that have the sandbox user
+        # Custom images may not have this user, so run as root (still isolated)
+        if not config.custom_image or 'grader-python-sandbox' in image:
+            container_config['user'] = 'sandbox'
+        
         return self.docker_client.containers.create(**container_config)
+
     
     def _create_runner_script(self) -> str:
         """Create Python runner script that executes student and test code"""

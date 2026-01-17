@@ -180,11 +180,27 @@ async def evaluate_cell(request: CellEvaluationRequest):
     This allows students to test their code before submitting the full assignment.
     """
     try:
+        # Get assignment to check for custom Docker image
+        from models import Assignment, CustomDockerImage
+        from beanie import PydanticObjectId
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        custom_image_name = None
+        
+        assignment = await Assignment.get(PydanticObjectId(request.assignment_id))
+        if assignment and assignment.custom_docker_image_id:
+            custom_image = await CustomDockerImage.get(PydanticObjectId(assignment.custom_docker_image_id))
+            if custom_image and custom_image.status == "uploaded":
+                custom_image_name = custom_image.full_image_name
+                logger.info(f"Using custom image for cell evaluation: {custom_image_name}")
+        
         result = await grader_service.evaluate_single_cell(
             assignment_id=request.assignment_id,
             cell_id=request.cell_id,
             student_code=request.student_code,
-            timeout=request.timeout
+            timeout=request.timeout,
+            custom_docker_image_name=custom_image_name
         )
         return CellEvaluationResponse(**result)
     except Exception as e:
