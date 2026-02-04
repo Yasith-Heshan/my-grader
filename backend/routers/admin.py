@@ -7,6 +7,7 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 
 from backend.schemas.admin import TeacherResponse
+from backend.schemas.user import StudentResponse
 from backend.services import audit_service
 from services import admin_service, teacher_service, student_service, submission_service
 from models import Admin
@@ -74,29 +75,57 @@ async def create_teacher(
     )
 
 
-@router.post("/create-student", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/create-student",
+    response_model=StudentResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new student account",
+    description="Admin endpoint to create a new student with email, password, and optional student number"
+)
 async def create_student(
-    payload: CreateStudentRequest, admin: Admin = Depends(get_current_admin)
-):
-    """Admin creates a new student account"""
-    existing = await student_service.get_student_by_email(payload.email)
-    if existing:
-        raise HTTPException(status_code=400, detail="Student already exists")
-
-    student = await admin_service.create_student(
-        name=payload.name,
-        email=payload.email,
-        password_hash=hash_password(payload.password),
-        student_number=payload.student_number,
+    request: CreateStudentRequest,  # Renamed from 'payload'
+    current_admin: Admin = Depends(get_current_admin)  # Renamed from 'admin'
+) -> StudentResponse:
+    """
+    Create a new student account
+    
+    - **name**: Student's full name (2-100 chars)
+    - **email**: Valid email address (must be unique)
+    - **password**: Strong password (min 8 chars, mixed case, numbers)
+    - **student_number**: Optional student ID (alphanumeric, unique)
+    
+    Returns the created student information
+    """
+    # Service handles all business logic
+    student = await admin_service.create_student_account(
+        name=request.name,
+        email=request.email,
+        password=request.password,  # Service will hash it
+        student_number=request.student_number
     )
-
-    return {
-        "id": str(student.id),
-        "name": student.name,
-        "email": student.email,
-        "student_number": student.student_number,
-        "message": "Student account created successfully",
-    }
+    
+    # Audit trail
+    await audit_service.log_admin_action(
+        admin_id=str(current_admin.id),
+        action=audit_service.AuditAction.CREATE_STUDENT,
+        resource_type=audit_service.ResourceType.STUDENT,
+        resource_id=str(student.id),
+        details={
+            "email": student.email,
+            "name": student.name,
+            "student_number": student.student_number
+        }
+    )
+    
+    # Return structured response
+    return StudentResponse(
+        id=str(student.id),
+        name=student.name,
+        email=student.email,
+        student_number=student.student_number,
+        message="Student account created successfully",
+        created_at=student.created_at
+    )
 
 
 @router.get("/submissions")

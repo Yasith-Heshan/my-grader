@@ -6,6 +6,7 @@ class AuditAction(str, Enum):
     CREATE_TEACHER = "create_teacher"
     CREATE_STUDENT = "create_student"
     DELETE_USER = "delete_user"
+    UPDATE_USER = "update_user"
 
 class ResourceType(str, Enum):
     """Types of resources that can be audited"""
