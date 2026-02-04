@@ -6,6 +6,8 @@ from fastapi import APIRouter, HTTPException, status, Request, Depends
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 
+from backend.schemas.admin import TeacherResponse
+from backend.services import audit_service
 from services import admin_service, teacher_service, student_service, submission_service
 from models import Admin
 from utils.security import hash_password
@@ -32,27 +34,44 @@ class GradeSubmissionRequest(BaseModel):
     feedback: Optional[str] = None
 
 
-@router.post("/create-teacher", status_code=status.HTTP_201_CREATED)
+@router.post(
+        "/create-teacher",
+          status_code=status.HTTP_201_CREATED,
+          summary="Create a new teacher account",
+          description="Admin endpoint to create a new teacher account"
+)
 async def create_teacher(
-    payload: CreateTeacherRequest, admin: Admin = Depends(get_current_admin)
-):
-    """Admin creates a new teacher account"""
-    existing = await teacher_service.get_teacher_by_email(payload.email)
-    if existing:
-        raise HTTPException(status_code=400, detail="Teacher already exists")
-
-    teacher = await admin_service.create_teacher(
-        name=payload.name,
-        email=payload.email,
-        password_hash=hash_password(payload.password),
+    request: CreateTeacherRequest, current_admin: Admin = Depends(get_current_admin)
+)->TeacherResponse:
+    """
+    Create a new teacher account
+    
+    - **name**: Teacher's full name (2-100 chars)
+    - **email**: Valid email address (must be unique)
+    - **password**: Strong password (min 8 chars, mixed case, numbers)
+    
+    Returns the created teacher information
+    """
+    teacher = await admin_service.create_teacher_account(
+        name=request.name,
+        email=request.email,
+        password=request.password  # Service will hash it
     )
 
-    return {
-        "id": str(teacher.id),
-        "name": teacher.name,
-        "email": teacher.email,
-        "message": "Teacher account created successfully",
-    }
+    await audit_service.log_admin_action(
+        admin_id=str(current_admin.id),
+        action=audit_service.AuditAction.CREATE_TEACHER,
+        resource_type=audit_service.ResourceType.TEACHER, 
+        resource_id=str(teacher.id),
+        details={"email": teacher.email, "name": teacher.name}
+    )
+    return TeacherResponse(
+        id=str(teacher.id),
+        name=teacher.name,
+        email=teacher.email,
+        message="Teacher account created successfully",
+        created_at=teacher.created_at
+    )
 
 
 @router.post("/create-student", status_code=status.HTTP_201_CREATED)

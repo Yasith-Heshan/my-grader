@@ -12,6 +12,8 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 import traceback
 
+from backend.middleware.exception_handler import exception_middleware
+
 # Imports work both when run directly (python main.py) and as module (python -m uvicorn backend.main:app)
 try:
     # Try backend-qualified imports first (when running as module from repo root)
@@ -52,6 +54,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(exception_middleware)
 
 
 # Global exception handlers
